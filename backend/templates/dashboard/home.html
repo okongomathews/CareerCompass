@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard – CareerCompass Kenya{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+{% load static %}
+
+{% if user.user_type == 'admin' or user.is_staff %}
+<!-- ADMIN REDIRECT HINT -->
+<div class="max-w-lg mx-auto mt-8 text-center">
+  <div class="bg-white rounded-2xl shadow p-8">
+    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-chart-line text-indigo-600 text-2xl"></i>
+    </div>
+    <h2 class="text-xl font-bold text-gray-800 mb-2">Admin Panel</h2>
+    <p class="text-gray-500 mb-6">As an administrator, your workspace is the Analytics Dashboard.</p>
+    <a href="{% url 'analytics:admin_dashboard' %}"
+       class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition">
+      <i class="fas fa-chart-line"></i> Go to Analytics Dashboard
+    </a>
+  </div>
+</div>
+
+{% else %}
+<!-- ── STUDENT / TEACHER / PARENT DASHBOARD ─────────────────────────────── -->
+
+<!-- Welcome Banner -->
+<div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-6 text-white animate-fade-in-up">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <p class="text-blue-200 text-sm mb-1">
+        {% now "l, j F Y" %}
+      </p>
+      <h1 class="text-2xl md:text-3xl font-bold">
+        Welcome back, {{ user.first_name|default:user.username }}! 👋
+      </h1>
+      <p class="text-blue-200 mt-1 text-sm">
+        {% if assessment_result %}
+          Your {{ assessment_result.personality_type.mbti_type }} profile is ready — {{ assessment_result.personality_type.name }}.
+        {% else %}
+          Complete your personality assessment to unlock personalised career matches.
+        {% endif %}
+      </p>
+    </div>
+    <div class="flex gap-3 flex-shrink-0">
+      {% if not assessment_result %}
+      <a href="{% url 'assessments:assessments-start' %}"
+         class="px-5 py-2.5 bg-white text-blue-700 font-semibold rounded-xl hover:bg-blue-50 transition text-sm shadow">
+        <i class="fas fa-brain mr-2"></i>Start Assessment
+      </a>
+      {% else %}
+      <a href="{% url 'assessments:assessments-results' %}"
+         class="px-5 py-2.5 bg-white text-blue-700 font-semibold rounded-xl hover:bg-blue-50 transition text-sm shadow">
+        <i class="fas fa-chart-pie mr-2"></i>View Results
+      </a>
+      <a href="{% url 'recommendations:my_recommendations' %}"
+         class="px-5 py-2.5 bg-blue-500 bg-opacity-60 text-white font-semibold rounded-xl hover:bg-opacity-80 transition text-sm">
+        <i class="fas fa-briefcase mr-2"></i>My Careers
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ── KPI Row ──────────────────────────────────────────────────────────── -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+  <!-- Personality Type -->
+  <div class="stat-card animate-fade-in-up" style="animation-delay:.05s">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Personality</span>
+      <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+        <i class="fas fa-brain text-blue-500 text-sm"></i>
+      </div>
+    </div>
+    {% if assessment_result %}
+    <div class="text-2xl font-black text-blue-600">{{ assessment_result.personality_type.mbti_type }}</div>
+    <p class="text-xs text-gray-500 mt-1">{{ assessment_result.personality_type.name }}</p>
+    {% else %}
+    <div class="text-2xl font-black text-gray-300">--</div>
+    <p class="text-xs text-gray-400 mt-1">Not assessed yet</p>
+    {% endif %}
+  </div>
+
+  <!-- Career Matches -->
+  <div class="stat-card animate-fade-in-up" style="animation-delay:.1s">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Matches</span>
+      <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+        <i class="fas fa-briefcase text-green-500 text-sm"></i>
+      </div>
+    </div>
+    <div class="text-2xl font-black text-green-600">{{ recommendations|length }}</div>
+    <p class="text-xs text-gray-500 mt-1">Career recommendations</p>
+  </div>
+
+  <!-- Learning Style -->
+  <div class="stat-card animate-fade-in-up" style="animation-delay:.15s">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Learning</span>
+      <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+        <i class="fas fa-book text-purple-500 text-sm"></i>
+      </div>
+    </div>
+    {% if learning_style %}
+    <div class="text-xl font-black text-purple-600">{{ learning_style.name|title }}</div>
+    <p class="text-xs text-gray-500 mt-1">Learning style</p>
+    {% else %}
+    <div class="text-xl font-black text-gray-300">--</div>
+    <p class="text-xs text-gray-400 mt-1">Complete assessment</p>
+    {% endif %}
+  </div>
+
+  <!-- Profile Completion -->
+  <div class="stat-card animate-fade-in-up" style="animation-delay:.2s">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Profile</span>
+      <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+        <i class="fas fa-user-check text-orange-500 text-sm"></i>
+      </div>
+    </div>
+    <div class="text-2xl font-black text-orange-500">{{ profile_completion|default:0 }}%</div>
+    <div class="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      <div class="h-full bg-orange-400 rounded-full transition-all duration-700"
+           style="width: {{ profile_completion|default:0 }}%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main Grid ─────────────────────────────────────────────────────────── -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+  <!-- LEFT: Assessment & Top Recommendations -->
+  <div class="xl:col-span-2 space-y-6">
+
+    <!-- Personality Assessment Card -->
+    {% if assessment_result and pole_percentages %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style="animation-delay:.25s">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold text-gray-800">Your Personality Profile</h2>
+        <a href="{% url 'assessments:assessments-results' %}"
+           class="text-sm text-blue-600 hover:text-blue-800 font-medium">Full Results →</a>
+      </div>
+
+      <div class="flex items-center gap-4 mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-black flex-shrink-0"
+             style="background: {{ assessment_result.personality_type.get_color }}">
+          {{ assessment_result.personality_type.mbti_type }}
+        </div>
+        <div>
+          <div class="font-bold text-gray-800 text-lg">{{ assessment_result.personality_type.name }}</div>
+          <div class="text-sm text-gray-500">{{ assessment_result.personality_type.get_temperament_label }} •
+            {{ assessment_result.get_confidence_percent }}% confidence</div>
+        </div>
+      </div>
+
+      <!-- A/B Pole Bars -->
+      <div class="space-y-4">
+        {% for dim_code, dim in pole_percentages.items %}
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="pole-letter {% if dim.a_pct >= 50 %}pole-dominant{% else %}pole-secondary{% endif %} text-xs">
+                {{ dim.a_letter }}</span>
+              <span class="text-xs font-medium text-gray-700">{{ dim.a_label }}</span>
+              <span class="text-xs text-gray-400">vs</span>
+              <span class="text-xs font-medium text-gray-700">{{ dim.b_label }}</span>
+              <span class="pole-letter {% if dim.b_pct > 50 %}pole-dominant{% else %}pole-secondary{% endif %} text-xs">
+                {{ dim.b_letter }}</span>
+            </div>
+            <div class="text-xs text-gray-500">
+              <span class="font-semibold text-blue-600">{{ dim.dominant }}</span>
+              {{ dim.dominant_pct }}%
+            </div>
+          </div>
+          <div class="pole-bar-container">
+            <div class="pole-bar-a" style="width:{{ dim.a_pct }}%"></div>
+            <div class="pole-bar-b" style="width:{{ dim.b_pct }}%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-400 mt-0.5">
+            <span>{{ dim.a_pct }}% {{ dim.a_letter }}</span>
+            <span>{{ dim.b_letter }} {{ dim.b_pct }}%</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% else %}
+    <!-- No assessment yet -->
+    <div class="bg-white rounded-2xl shadow-sm border border-dashed border-blue-200 p-8 text-center animate-fade-in-up" style="animation-delay:.25s">
+      <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-brain text-blue-500 text-2xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-2">Discover Your Personality Type</h3>
+      <p class="text-gray-500 text-sm mb-5 max-w-sm mx-auto">
+        Our {{ question_count }}-question MBTI assessment takes about 15–20 minutes and unlocks personalised career recommendations.
+      </p>
+      <a href="{% url 'assessments:assessments-start' %}"
+         class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition">
+        <i class="fas fa-play-circle"></i> Start Personality Test
+      </a>
+    </div>
+    {% endif %}
+
+    <!-- Career Recommendations -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style="animation-delay:.3s">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold text-gray-800">Top Career Matches</h2>
+        {% if recommendations %}
+        <a href="{% url 'recommendations:my_recommendations' %}"
+           class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All →</a>
+        {% endif %}
+      </div>
+
+      {% if recommendations %}
+      <div class="space-y-3">
+        {% for rec in recommendations %}
+        {% widthratio rec.overall_score 1 100 as pct %}
+        <div class="flex items-center gap-4 p-3 border border-gray-100 rounded-xl hover:border-blue-200 hover:bg-blue-50 transition card-hover">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-briefcase text-white text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-gray-800 text-sm truncate">{{ rec.career.name }}</div>
+            <div class="text-xs text-gray-500">{{ rec.career.category }}</div>
+            {% if rec.career.entry_level_salary %}
+            <div class="text-xs text-green-600 font-medium mt-0.5">
+              <i class="fas fa-money-bill-wave text-xs mr-1"></i>
+              From KES {{ rec.career.entry_level_salary|floatformat:0 }}/yr
+            </div>
+            {% endif %}
+            <div class="mt-1.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-700
+                  {% if pct >= 70 %}bg-green-500{% elif pct >= 50 %}bg-blue-500{% else %}bg-gray-400{% endif %}"
+                   style="width:{{ pct }}%"></div>
+            </div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="font-bold text-sm
+                {% if pct >= 70 %}text-green-600{% elif pct >= 50 %}text-blue-600{% else %}text-gray-500{% endif %}">
+              {{ pct }}%
+            </div>
+            <div class="text-xs text-gray-400">match</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-8 text-gray-400">
+        <i class="fas fa-briefcase text-4xl mb-3"></i>
+        <p class="text-sm">Complete the personality test to see your career recommendations</p>
+        <a href="{% url 'assessments:assessments-start' %}" class="text-blue-600 text-sm font-medium mt-2 inline-block">
+          Take the test →
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- RIGHT: Quick Actions + Progress + Learning Style -->
+  <div class="space-y-6">
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up" style="animation-delay:.35s">
+      <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Quick Actions</h3>
+      <div class="space-y-2">
+        <a href="{% url 'assessments:assessments-start' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition group">
+          <div class="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition">
+            <i class="fas fa-brain text-purple-600"></i>
+          </div>
+          <span class="text-sm font-medium text-gray-700">Personality Test</span>
+          <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto"></i>
+        </a>
+        <a href="{% url 'ai_coach:chat' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition group">
+          <div class="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition">
+            <i class="fas fa-robot text-blue-600"></i>
+          </div>
+          <span class="text-sm font-medium text-gray-700">AI Career Coach</span>
+          <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto"></i>
+        </a>
+        <a href="{% url 'recommendations:career_list' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition group">
+          <div class="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition">
+            <i class="fas fa-compass text-green-600"></i>
+          </div>
+          <span class="text-sm font-medium text-gray-700">Explore Careers</span>
+          <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto"></i>
+        </a>
+        <a href="{% url 'profile' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-orange-50 transition group">
+          <div class="w-9 h-9 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 transition">
+            <i class="fas fa-user-edit text-orange-600"></i>
+          </div>
+          <span class="text-sm font-medium text-gray-700">Update Profile</span>
+          <i class="fas fa-chevron-right text-gray-300 text-xs ml-auto"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Journey Progress -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up" style="animation-delay:.4s">
+      <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Your Journey</h3>
+      <div class="space-y-4">
+        {% with profile_pct=profile_completion|default:0 %}
+        <div>
+          <div class="flex justify-between text-xs text-gray-600 mb-1.5">
+            <span class="font-medium">Profile</span>
+            <span class="font-bold {% if profile_pct >= 70 %}text-green-600{% else %}text-orange-500{% endif %}">{{ profile_pct }}%</span>
+          </div>
+          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full" style="width:{{ profile_pct }}%"></div>
+          </div>
+        </div>
+        {% endwith %}
+
+        <div>
+          <div class="flex justify-between text-xs text-gray-600 mb-1.5">
+            <span class="font-medium">Assessment</span>
+            <span class="font-bold {% if assessment_result %}text-green-600{% else %}text-gray-400{% endif %}">
+              {% if assessment_result %}100%{% else %}0%{% endif %}</span>
+          </div>
+          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-purple-400 to-purple-500 rounded-full"
+                 style="width:{% if assessment_result %}100{% else %}0{% endif %}%"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs text-gray-600 mb-1.5">
+            <span class="font-medium">Career Matches</span>
+            <span class="font-bold {% if recommendations %}text-green-600{% else %}text-gray-400{% endif %}">
+              {% if recommendations %}{{ recommendations|length }} found{% else %}Pending{% endif %}</span>
+          </div>
+          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"
+                 style="width:{% if recommendations %}100{% else %}0{% endif %}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Learning Style -->
+    {% if learning_style %}
+    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 text-white animate-fade-in-up" style="animation-delay:.45s">
+      <div class="text-xs font-semibold uppercase tracking-wide text-indigo-200 mb-3">Learning Style</div>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+          <i class="fas
+            {% if learning_style.name == 'visual' %}fa-eye
+            {% elif learning_style.name == 'auditory' %}fa-ear-listen
+            {% elif learning_style.name == 'reading' %}fa-book-open
+            {% else %}fa-hand-sparkles{% endif %}
+            text-2xl text-white"></i>
+        </div>
+        <div>
+          <div class="font-bold text-lg">{{ learning_style.name|title }}</div>
+          <div class="text-indigo-200 text-xs">{{ learning_style.description|truncatewords:10 }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}

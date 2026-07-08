@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Create Account – CareerCompass Kenya{% endblock %}
+
+{% block auth_content %}
+<div class="flex-1 py-10 px-4">
+<div class="max-w-xl mx-auto">
+
+  <!-- Logo header -->
+  <div class="text-center mb-8">
+    <div class="mx-auto w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl
+                flex items-center justify-center shadow-lg mb-4">
+      <i class="fas fa-compass text-white text-2xl"></i>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900">Join CareerCompass Kenya</h1>
+    <p class="text-gray-500 mt-1 text-sm">Discover your path — for everyone, at any stage of life</p>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-xl p-8">
+
+    {% if form.non_field_errors %}
+    <div class="mb-5 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+      {% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" id="registerForm" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="role" id="roleField" value="user">
+
+      <!-- Role selector -->
+      <div class="mb-6">
+        <label class="block text-sm font-semibold text-gray-700 mb-3">I am creating this account as a:</label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button type="button" id="roleUser" onclick="setRole('user')"
+                  class="role-btn selected flex flex-col items-center gap-2 p-4 border-2 border-blue-500
+                         bg-blue-50 rounded-xl transition cursor-pointer text-center">
+            <i class="fas fa-user text-blue-600 text-2xl"></i>
+            <span class="font-semibold text-sm text-gray-800">General User</span>
+            <span class="text-xs text-gray-500">Professional, career-changer, or anyone exploring options</span>
+          </button>
+          <button type="button" id="roleStudent" onclick="setRole('student')"
+                  class="role-btn flex flex-col items-center gap-2 p-4 border-2 border-gray-200
+                         bg-white rounded-xl transition cursor-pointer hover:border-blue-300 hover:bg-blue-50 text-center">
+            <i class="fas fa-user-graduate text-gray-400 text-2xl"></i>
+            <span class="font-semibold text-sm text-gray-800">Student</span>
+            <span class="text-xs text-gray-500">Currently enrolled in school or university</span>
+          </button>
+          <button type="button" id="roleAdmin" onclick="setRole('admin')"
+                  class="role-btn flex flex-col items-center gap-2 p-4 border-2 border-gray-200
+                         bg-white rounded-xl transition cursor-pointer hover:border-red-300 hover:bg-red-50 text-center">
+            <i class="fas fa-shield-halved text-gray-400 text-2xl"></i>
+            <span class="font-semibold text-sm text-gray-800">Administrator</span>
+            <span class="text-xs text-gray-500">Analytics, reports, system management</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Name row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">First Name *</label>
+          <input type="text" name="first_name" required autocomplete="given-name"
+                 value="{{ form.first_name.value|default:'' }}"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm
+                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                 placeholder="First name">
+          {% if form.first_name.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ form.first_name.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Last Name *</label>
+          <input type="text" name="last_name" required autocomplete="family-name"
+                 value="{{ form.last_name.value|default:'' }}"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm
+                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                 placeholder="Last name">
+          {% if form.last_name.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ form.last_name.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <!-- Username -->
+      <div class="mb-4">
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+          Username * <span class="font-normal text-gray-400">(used to log in)</span>
+        </label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+            <i class="fas fa-at text-gray-400 text-sm"></i>
+          </div>
+          <input type="text" name="username" id="usernameInput" required autocomplete="username"
+                 value="{{ form.username.value|default:'' }}"
+                 class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm
+                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                 placeholder="johndoe123" minlength="3" maxlength="30">
+        </div>
+        <div id="usernameStatus" class="mt-1 text-xs hidden"></div>
+        {% if form.username.errors %}
+        <p class="text-xs text-red-600 mt-1">{{ form.username.errors.0 }}</p>{% endif %}
+      </div>
+
+      <!-- Email -->
+      <div class="mb-4">
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Address *</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+            <i class="fas fa-envelope text-gray-400 text-sm"></i>
+          </div>
+          <input type="email" name="email" required autocomplete="email"
+                 value="{{ form.email.value|default:'' }}"
+                 class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm
+                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                 placeholder="you@example.com">
+        </div>
+        {% if form.email.errors %}
+        <p class="text-xs text-red-600 mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+      </div>
+
+      <!-- Phone (optional) -->
+      <div class="mb-4">
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+          Phone Number <span class="font-normal text-gray-400">(optional)</span>
+        </label>
+        <input type="text" name="phone_number" value="{{ form.phone_number.value|default:'' }}"
+               class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm
+                      focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+               placeholder="+254 700 000 000">
+      </div>
+
+      <!-- Academic section — optional, shown always but clearly labelled optional -->
+      <div id="academicSection" class="mb-4">
+        <button type="button" id="toggleAcademic"
+                onclick="toggleAcademic()"
+                class="w-full flex items-center justify-between px-4 py-3 bg-blue-50 border border-blue-100
+                       rounded-xl text-sm font-semibold text-blue-700 hover:bg-blue-100 transition">
+          <span><i class="fas fa-graduation-cap mr-2"></i>Academic Information
+            <span class="font-normal text-blue-500">(optional — for students)</span>
+          </span>
+          <i id="academicChevron" class="fas fa-chevron-down text-blue-400 transition-transform"></i>
+        </button>
+        <div id="academicFields" class="hidden mt-3 space-y-3 px-1">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">School / University</label>
+              <input type="text" name="school_name"
+                     class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm
+                            focus:ring-2 focus:ring-blue-500 transition"
+                     placeholder="Name of your institution">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Current Level</label>
+              <select name="grade_level"
+                      class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm
+                             focus:ring-2 focus:ring-blue-500 bg-white transition">
+                <option value="">-- Select (optional) --</option>
+                {% for val, lbl in form.grade_level.field.choices %}
+                {% if val %}<option value="{{ val }}">{{ lbl }}</option>{% endif %}
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">KCSE Grade
+              <span class="text-gray-400">(if completed)</span></label>
+            <input type="text" name="kcse_score"
+                   class="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm
+                          focus:ring-2 focus:ring-blue-500 transition"
+                   placeholder="e.g. A, B+, C — leave blank if not yet done">
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin code (only shown when admin role selected) -->
+      <div id="adminSection" class="hidden mb-4">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div class="flex items-start gap-2 mb-3">
+            <i class="fas fa-shield-halved text-amber-600 mt-0.5"></i>
+            <div>
+              <div class="font-semibold text-amber-800 text-sm">System Administrator Account</div>
+              <div class="text-amber-700 text-xs mt-0.5">
+                Admin accounts have access to analytics and reports. Full Django admin panel
+                access must be granted by an existing superuser admin after account creation.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passwords -->
+      <div class="border-t border-gray-100 my-5"></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Password *</label>
+          <div class="relative">
+            <input type="password" name="password1" id="pwd1" required autocomplete="new-password"
+                   class="w-full pr-10 px-4 py-3 border border-gray-300 rounded-xl text-sm
+                          focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                   placeholder="Min. 8 characters">
+            <button type="button" onclick="togglePwd('pwd1','eye1')"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+              <i id="eye1" class="fas fa-eye text-sm"></i>
+            </button>
+          </div>
+          <div class="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div id="strengthBar" class="h-full rounded-full transition-all duration-500" style="width:0"></div>
+          </div>
+          <p id="strengthLabel" class="text-xs text-gray-400 mt-0.5"></p>
+          {% if form.password1.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ form.password1.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Confirm Password *</label>
+          <div class="relative">
+            <input type="password" name="password2" id="pwd2" required autocomplete="new-password"
+                   class="w-full pr-10 px-4 py-3 border border-gray-300 rounded-xl text-sm
+                          focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                   placeholder="Repeat password">
+            <button type="button" onclick="togglePwd('pwd2','eye2')"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+              <i id="eye2" class="fas fa-eye text-sm"></i>
+            </button>
+          </div>
+          <p id="matchLabel" class="text-xs mt-0.5"></p>
+          {% if form.password2.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ form.password2.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <!-- Terms -->
+      <div class="flex items-start gap-3 mb-6">
+        <input type="checkbox" id="terms" name="terms" required
+               class="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+        <label for="terms" class="text-sm text-gray-600">
+          I agree to the <a href="#" class="text-blue-600 font-medium hover:underline">Terms of Service</a>
+          and <a href="#" class="text-blue-600 font-medium hover:underline">Privacy Policy</a>
+        </label>
+      </div>
+
+      <button type="submit"
+              class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white
+                     font-semibold rounded-xl shadow hover:shadow-md transition text-sm">
+        <i class="fas fa-user-plus mr-2"></i>Create Account
+      </button>
+    </form>
+
+    <p class="text-center text-sm text-gray-500 mt-6">
+      Already have an account?
+      <a href="{% url 'login' %}" class="text-blue-600 font-semibold hover:underline">Sign in</a>
+    </p>
+  </div><!-- /card -->
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function setRole(role) {
+  document.getElementById('roleField').value = role;
+  const userBtn    = document.getElementById('roleUser');
+  const studentBtn = document.getElementById('roleStudent');
+  const adminBtn   = document.getElementById('roleAdmin');
+  const adminSec   = document.getElementById('adminSection');
+  const acadSec    = document.getElementById('academicSection');
+
+  // Reset all buttons
+  [userBtn, studentBtn, adminBtn].forEach(function(btn) {
+    if (!btn) return;
+    btn.classList.remove('border-blue-500','bg-blue-50','border-red-400','bg-red-50');
+    btn.classList.add('border-gray-200','bg-white');
+    const icon = btn.querySelector('i');
+    if (icon) icon.className = icon.className.replace('text-blue-600','text-gray-400').replace('text-red-600','text-gray-400');
+  });
+
+  if (role === 'user') {
+    if (userBtn) {
+      userBtn.classList.add('border-blue-500','bg-blue-50');
+      userBtn.classList.remove('border-gray-200','bg-white');
+      const icon = userBtn.querySelector('i');
+      if (icon) icon.className = icon.className.replace('text-gray-400','text-blue-600');
+    }
+    adminSec.classList.add('hidden');
+    // Hide academic section for general users (they can open it manually)
+    acadSec.style.opacity = '0.6';
+    document.getElementById('academicFields').classList.add('hidden');
+    document.getElementById('academicChevron').style.transform = '';
+    const lbl = document.querySelector('#academicSection button span:first-child');
+    if (lbl) lbl.innerHTML = '<i class="fas fa-graduation-cap mr-2"></i>Academic Information <span class="font-normal text-blue-500">(optional)</span>';
+  } else if (role === 'student') {
+    if (studentBtn) {
+      studentBtn.classList.add('border-blue-500','bg-blue-50');
+      studentBtn.classList.remove('border-gray-200','bg-white');
+      const icon = studentBtn.querySelector('i');
+      if (icon) icon.className = icon.className.replace('text-gray-400','text-blue-600');
+    }
+    adminSec.classList.add('hidden');
+    acadSec.style.opacity = '1';
+    // Auto-open academic section for students
+    document.getElementById('academicFields').classList.remove('hidden');
+    document.getElementById('academicChevron').style.transform = 'rotate(180deg)';
+    const lbl = document.querySelector('#academicSection button span:first-child');
+    if (lbl) lbl.innerHTML = '<i class="fas fa-graduation-cap mr-2"></i>Academic Information <span class="font-normal text-green-600 font-semibold">(recommended for students)</span>';
+  } else { // admin
+    if (adminBtn) {
+      adminBtn.classList.add('border-red-400','bg-red-50');
+      adminBtn.classList.remove('border-gray-200','bg-white');
+      const icon = adminBtn.querySelector('i');
+      if (icon) icon.className = icon.className.replace('text-gray-400','text-red-600');
+    }
+    adminSec.classList.remove('hidden');
+    acadSec.style.opacity = '0.4';
+    document.getElementById('academicFields').classList.add('hidden');
+  }
+}
+
+function toggleAcademic() {
+  const f = document.getElementById('academicFields');
+  const c = document.getElementById('academicChevron');
+  f.classList.toggle('hidden');
+  c.style.transform = f.classList.contains('hidden') ? '' : 'rotate(180deg)';
+}
+
+function togglePwd(id, eyeId) {
+  const inp = document.getElementById(id);
+  const eye = document.getElementById(eyeId);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  eye.className = inp.type === 'password' ? 'fas fa-eye text-sm' : 'fas fa-eye-slash text-sm';
+}
+
+// Password strength
+document.getElementById('pwd1').addEventListener('input', function() {
+  const v = this.value;
+  let s = 0;
+  if (v.length >= 8) s++;
+  if (/[A-Z]/.test(v)) s++;
+  if (/[0-9]/.test(v)) s++;
+  if (/[^A-Za-z0-9]/.test(v)) s++;
+  const bar = document.getElementById('strengthBar');
+  const lbl = document.getElementById('strengthLabel');
+  const cfg = [
+    ['0%','bg-gray-200',''],
+    ['25%','bg-red-500','Weak'],
+    ['50%','bg-yellow-500','Fair'],
+    ['75%','bg-blue-500','Good'],
+    ['100%','bg-green-500','Strong'],
+  ];
+  bar.style.width = cfg[s][0];
+  bar.className = `h-full rounded-full transition-all duration-500 ${cfg[s][1]}`;
+  lbl.textContent = cfg[s][2];
+  lbl.className = `text-xs mt-0.5 ${s < 2 ? 'text-red-500' : s < 4 ? 'text-yellow-600' : 'text-green-600'}`;
+});
+
+// Password match
+document.getElementById('pwd2').addEventListener('input', function() {
+  const m = document.getElementById('matchLabel');
+  if (this.value === document.getElementById('pwd1').value) {
+    m.textContent = '✓ Passwords match'; m.className = 'text-xs mt-0.5 text-green-600';
+  } else {
+    m.textContent = 'Passwords do not match'; m.className = 'text-xs mt-0.5 text-red-500';
+  }
+});
+
+// Enter on username → password
+document.getElementById('usernameInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('pwd1').focus();
+  }
+});
+
+// Re-select role if form was submitted with errors
+const savedRole = document.getElementById('roleField').value || 'user';
+setRole(savedRole);
+</script>
+{% endblock %}

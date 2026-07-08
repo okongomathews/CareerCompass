@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{% block title %}CareerCompass Kenya{% endblock %}</title>
+  {# All assets served locally — zero CDN dependencies #}
+  {% load static %}
+  <script src="{% static 'js/tailwind.min.js' %}"></script>
+  {# FA CSS defines icon classes; fontawesome-local overrides @font-face with absolute /static/ paths #}
+  <link href="{% static 'css/fontawesome/all.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/fontawesome-local.css' %}" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="h-full bg-slate-50">
+
+{% if user.is_authenticated %}
+{# ════════════════════════════════════════════════════════════════════════════ #}
+{#  AUTHENTICATED LAYOUT — sidebar + topbar + main                             #}
+{# ════════════════════════════════════════════════════════════════════════════ #}
+
+<!-- Mobile overlay -->
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-layout">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+  <aside id="sidebar" class="sidebar custom-scrollbar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="w-9 h-9 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-graduation-cap text-white text-lg"></i>
+      </div>
+      <div>
+        <div class="sidebar-logo-text">CareerCompass</div>
+        <div class="sidebar-logo-sub">Kenya Career Guidance</div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 py-4">
+      {% if user.user_type == 'admin' or user.is_staff %}
+      <!-- Admin navigation -->
+      <div class="sidebar-section-label">Administration</div>
+      <a href="{% url 'analytics:admin_dashboard' %}"
+         class="sidebar-nav-item {% if 'analytics' in request.path %}active{% endif %}">
+        <i class="fas fa-chart-line icon"></i> Analytics Dashboard
+      </a>
+      <a href="{% url 'analytics:assessment_report' %}"
+         class="sidebar-nav-item {% if 'assessment_report' in request.path %}active{% endif %}">
+        <i class="fas fa-file-chart-column icon"></i> Assessment Reports
+      </a>
+      <a href="{% url 'analytics:student_report_list' %}"
+         class="sidebar-nav-item {% if 'student_report_list' in request.path or 'career_report' in request.path %}active{% endif %}">
+        <i class="fas fa-file-pdf icon"></i> Career Reports (PDF)
+      </a>
+      <div class="sidebar-section-label mt-4">System</div>
+      <a href="/admin/" class="sidebar-nav-item">
+        <i class="fas fa-shield-halved icon"></i> Django Admin Panel
+      </a>
+      <a href="{% url 'help_faq' %}"
+         class="sidebar-nav-item {% if 'help' in request.path %}active{% endif %}">
+        <i class="fas fa-circle-question icon"></i> Help &amp; FAQs
+      </a>
+
+      {% else %}
+      <!-- Student / Teacher / Parent navigation -->
+      <div class="sidebar-section-label">Main</div>
+      <a href="{% url 'dashboard' %}"
+         class="sidebar-nav-item {% if request.path == '/users/dashboard/' %}active{% endif %}">
+        <i class="fas fa-house icon"></i> Dashboard
+      </a>
+      <a href="{% url 'profile' %}"
+         class="sidebar-nav-item {% if '/profile' in request.path and 'update' not in request.path %}active{% endif %}">
+        <i class="fas fa-user-circle icon"></i> My Profile
+      </a>
+
+      <div class="sidebar-section-label mt-4">Career Discovery</div>
+      <a href="{% url 'assessments:assessments-start' %}"
+         class="sidebar-nav-item {% if '/assessments/' in request.path %}active{% endif %}">
+        <i class="fas fa-brain icon"></i> Personality Test
+      </a>
+      <a href="{% url 'recommendations:my_recommendations' %}"
+         class="sidebar-nav-item {% if 'my_recommendations' in request.path %}active{% endif %}">
+        <i class="fas fa-briefcase icon"></i> My Careers
+      </a>
+      <a href="{% url 'recommendations:career_list' %}"
+         class="sidebar-nav-item {% if 'career_list' in request.path %}active{% endif %}">
+        <i class="fas fa-compass icon"></i> Explore Careers
+      </a>
+
+      <div class="sidebar-section-label mt-4">AI Coach</div>
+      <a href="{% url 'ai_coach:chat' %}"
+         class="sidebar-nav-item {% if 'ai-coach' in request.path and 'coaching' not in request.path and 'resource' not in request.path %}active{% endif %}">
+        <i class="fas fa-robot icon"></i> AI Coach Chat
+      </a>
+      <a href="{% url 'ai_coach:coaching_plan' %}"
+         class="sidebar-nav-item {% if 'coaching_plan' in request.path or 'coaching-plan' in request.path %}active{% endif %}">
+        <i class="fas fa-map-marked-alt icon"></i> Coaching Plan
+      </a>
+      <a href="{% url 'ai_coach:learning_resources' %}"
+         class="sidebar-nav-item {% if 'resources' in request.path %}active{% endif %}">
+        <i class="fas fa-book-open icon"></i> Learning Resources
+      </a>
+      <div class="sidebar-section-label mt-4">Support</div>
+      <a href="{% url 'help_faq' %}"
+         class="sidebar-nav-item {% if 'help' in request.path %}active{% endif %}">
+        <i class="fas fa-circle-question icon"></i> Help &amp; FAQs
+      </a>
+
+      {% endif %}
+    </nav>
+
+    <!-- User footer -->
+    <div class="sidebar-user">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-9 h-9 rounded-full bg-blue-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+          {{ user.first_name|first|upper|default:user.username|first|upper }}
+        </div>
+        <div class="min-w-0">
+          <div class="text-white text-sm font-medium truncate">
+            {{ user.get_full_name|default:user.username|truncatechars:20 }}
+          </div>
+          <div class="text-blue-300 text-xs capitalize">{{ user.user_type }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit"
+                class="w-full text-left flex items-center gap-2 text-sm text-red-300 hover:text-red-100 transition py-1">
+          <i class="fas fa-right-from-bracket text-xs"></i> Sign out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ── Main area ─────────────────────────────────────────────────────────── -->
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar no-print">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()"
+                class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition text-gray-600">
+          <i class="fas fa-bars text-lg"></i>
+        </button>
+        <span class="topbar-title font-semibold text-gray-800">
+          {% block page_title %}CareerCompass Kenya{% endblock %}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        {% if user.user_type == 'admin' or user.is_staff %}
+        <span class="badge-sm bg-amber-100 text-amber-800 hidden sm:inline-flex items-center gap-1">
+          <i class="fas fa-shield-halved text-xs"></i> Admin
+        </span>
+        {% endif %}
+
+        {% block topbar_actions %}{% endblock %}
+
+        <!-- User menu dropdown -->
+        <div class="relative" id="userMenuContainer">
+          <button onclick="toggleUserMenu()"
+                  class="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition">
+            <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">
+              {{ user.first_name|first|upper|default:user.username|first|upper }}
+            </div>
+            <span class="hidden md:inline">{{ user.first_name|default:user.username|truncatechars:12 }}</span>
+            <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+          </button>
+          <div id="userMenu"
+               class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+            <a href="{% url 'profile' %}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+              <i class="fas fa-user-edit text-blue-500 w-4"></i> Profile
+            </a>
+            <a href="{% url 'help_faq' %}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+              <i class="fas fa-circle-question text-teal-500 w-4"></i> Help &amp; FAQs
+            </a>
+            {% if user.user_type != 'admin' and not user.is_staff %}
+            <a href="{% url 'assessments:assessments-start' %}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+              <i class="fas fa-brain text-purple-500 w-4"></i> Personality Test
+            </a>
+            {% endif %}
+            <div class="border-t border-gray-100 mt-1 pt-1">
+              <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+                <button type="submit" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                  <i class="fas fa-right-from-bracket w-4"></i> Sign Out
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Flash Messages -->
+    {% if messages %}
+    <div class="px-6 pt-4 space-y-2 no-print">
+      {% for message in messages %}
+      <div class="flex items-start gap-3 px-4 py-3 rounded-xl text-sm animate-fade-in
+          {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800
+          {% elif message.tags == 'warning' %}bg-amber-50 border border-amber-200 text-amber-800
+          {% elif message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800
+          {% else %}bg-blue-50 border border-blue-200 text-blue-800{% endif %}">
+        <i class="fas {% if message.tags == 'error' %}fa-circle-exclamation text-red-500{% elif message.tags == 'warning' %}fa-triangle-exclamation text-amber-500{% elif message.tags == 'success' %}fa-circle-check text-green-500{% else %}fa-circle-info text-blue-500{% endif %} mt-0.5 flex-shrink-0"></i>
+        <p class="flex-1">{{ message }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Page content -->
+    <main class="flex-1 p-6 overflow-auto">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 bg-white px-6 py-3 text-xs text-gray-400 flex justify-between no-print">
+      <span>© 2026 CareerCompass Kenya — Egerton University COMP 493</span>
+      <span>Samuel Mathews · S13/07776/22</span>
+    </footer>
+  </div>
+</div>
+
+{% else %}
+{# ════════════════════════════════════════════════════════════════════════════ #}
+{#  UNAUTHENTICATED LAYOUT                                                     #}
+{#  auth_content's default below renders {% block content %} with a public    #}
+{#  nav/footer, so plain "content"-block pages work here too. Pages that      #}
+{#  override auth_content directly (login/register) replace all of it.       #}
+{# ════════════════════════════════════════════════════════════════════════════ #}
+<main class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col">
+  {% if messages %}
+  <div class="max-w-md mx-auto w-full mt-6 px-4 space-y-2">
+    {% for message in messages %}
+    <div class="px-4 py-3 rounded-xl text-sm
+        {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800
+        {% elif message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800
+        {% else %}bg-blue-50 border border-blue-200 text-blue-800{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% block auth_content %}
+  {# Default public chrome — used by pages that only override {% block content %}     #}
+  {# below (e.g. the public career catalogue, market trends). Pages like login/register #}
+  {# override this entire auth_content block and never render any of this.            #}
+  <header class="border-b border-gray-200 bg-white/80 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2 font-bold text-gray-800">
+        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+          <i class="fas fa-compass text-white text-sm"></i>
+        </div>
+        CareerCompass <span class="hidden sm:inline text-gray-400 font-normal">Kenya</span>
+      </a>
+      <div class="flex items-center gap-2">
+        <a href="{% url 'login' %}" class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition">Sign in</a>
+        <a href="{% url 'register' %}" class="px-4 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">Get started free</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex-1 w-full">
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer class="border-t border-gray-200 bg-white px-6 py-4 text-xs text-gray-400 flex flex-col sm:flex-row gap-1 sm:justify-between">
+    <span>© 2026 CareerCompass Kenya — Egerton University COMP 493</span>
+    <a href="/" class="hover:text-gray-600 transition">← Back to homepage</a>
+  </footer>
+  {% endblock %}
+</main>
+{% endif %}
+
+{# ── Global scripts (rendered for ALL users — authenticated and not) ─────── #}
+{% load static %}
+<script src="{% static 'js/common.js' %}"></script>
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+function toggleUserMenu() {
+  document.getElementById('userMenu').classList.toggle('hidden');
+}
+document.addEventListener('click', function(e) {
+  const c = document.getElementById('userMenuContainer');
+  if (c && !c.contains(e.target)) {
+    const m = document.getElementById('userMenu');
+    if (m) m.classList.add('hidden');
+  }
+});
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('[data-width]').forEach(el => {
+    setTimeout(() => { el.style.width = el.dataset.width + '%'; }, 200);
+  });
+});
+</script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

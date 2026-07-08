@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}My Conversations - AI Career Coach{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">My Conversations</h1>
+                <p class="text-gray-600">Previous chats with your AI Career Coach</p>
+            </div>
+            <a href="{% url 'ai_coach:chat' %}" 
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                <i class="fas fa-plus mr-2"></i> New Chat
+            </a>
+        </div>
+    </div>
+    
+    {% if conversations %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for conversation in conversations %}
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition card-hover">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="font-semibold text-lg text-gray-800 truncate">{{ conversation.title }}</h3>
+                    <span class="text-xs text-gray-500">{{ conversation.created_at|date:"M d" }}</span>
+                </div>
+                
+                {% with last_message=conversation.messages.last %}
+                {% if last_message %}
+                <div class="mb-4">
+                    <p class="text-gray-600 text-sm truncate">
+                        {% if last_message.is_from_ai %}
+                        <span class="text-gray-400">AI:</span>
+                        {% else %}
+                        <span class="text-gray-400">You:</span>
+                        {% endif %}
+                        {{ last_message.content|truncatechars:80 }}
+                    </p>
+                </div>
+                {% endif %}
+                {% endwith %}
+                
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500">
+                        {{ conversation.messages.count }} messages
+                    </span>
+                    <a href="{% url 'ai_coach:conversation_detail' conversation.id %}" 
+                       class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        Continue Chat →
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Empty state for few conversations -->
+    {% if conversations.count < 3 %}
+    <div class="mt-8 text-center">
+        <p class="text-gray-600 mb-4">Start new conversations to explore different career topics!</p>
+        <a href="{% url 'ai_coach:chat' %}" 
+           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+            <i class="fas fa-comment mr-2"></i> Start New Chat
+        </a>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="bg-white rounded-lg shadow-md p-8 text-center">
+        <div class="text-gray-400 mb-4">
+            <i class="fas fa-comments text-5xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">No conversations yet</h3>
+        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+            Start your first conversation with the AI Career Coach to get personalized guidance on your career journey.
+        </p>
+        <a href="{% url 'ai_coach:chat' %}" 
+           class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+            <i class="fas fa-robot mr-2"></i> Start Chat with AI Coach
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,619 @@
+{% extends 'base.html' %}
+{% block title %}Assessment – CareerCompass Kenya{% endblock %}
+{% block page_title %}Personality Assessment{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Likert scale layout ─────────────────────────────────────────────────── */
+.likert-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+}
+.likert-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: .75rem .4rem;
+  cursor: pointer;
+  transition: all .18s;
+  border-right: 1px solid #e2e8f0;
+  background: #fff;
+  position: relative;
+}
+.likert-option:last-child { border-right: none; }
+.likert-option:hover { background: #eff6ff; }
+.likert-option.selected {
+  background: #eff6ff;
+}
+.likert-option.selected.agree   { background: #d1fae5; }
+.likert-option.selected.agree-s { background: #a7f3d0; }
+.likert-option.selected.disagree   { background: #fee2e2; }
+.likert-option.selected.disagree-s { background: #fecaca; }
+.likert-option.selected.neutral    { background: #f3f4f6; }
+
+.likert-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid #d1d5db;
+  margin-bottom: .4rem;
+  transition: all .18s;
+  flex-shrink: 0;
+}
+.likert-option.selected .likert-dot {
+  border-color: #3b82f6;
+  background: #3b82f6;
+}
+.likert-option.selected.agree-s .likert-dot   { border-color:#059669; background:#059669; }
+.likert-option.selected.agree .likert-dot     { border-color:#10b981; background:#10b981; }
+.likert-option.selected.neutral .likert-dot   { border-color:#9ca3af; background:#9ca3af; }
+.likert-option.selected.disagree .likert-dot  { border-color:#f87171; background:#f87171; }
+.likert-option.selected.disagree-s .likert-dot { border-color:#ef4444; background:#ef4444; }
+
+.likert-label {
+  font-size: .6rem; text-align: center; line-height: 1.2;
+  color: #6b7280; font-weight: 500;
+}
+.likert-option.selected .likert-label { font-weight: 700; color: #374151; }
+
+/* Pole labels */
+.pole-labels { display: flex; justify-content: space-between; margin-top: .5rem; padding: 0 .25rem; }
+.pole-label  { font-size: .65rem; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+/* Question card animation */
+#questionCard { transition: opacity .22s ease, transform .22s ease; }
+#questionCard.fade-out { opacity: 0; transform: translateY(-8px); }
+#questionCard.fade-in  { opacity: 1; transform: translateY(0); }
+
+/* Category colour strips */
+.cat-EI { background: #3b82f6; }
+.cat-SN { background: #8b5cf6; }
+.cat-TF { background: #ec4899; }
+.cat-JP { background: #f59e0b; }
+
+/* Mobile responsive — stack to 2-column on small screens */
+@media (max-width: 480px) {
+  .likert-label { font-size: .55rem; }
+  .likert-dot   { width: 18px; height: 18px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HCI: Pre-test primer shown once per session to encourage decisive answers -->
+<div id="preTip" class="max-w-2xl mx-auto mb-4 bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3 transition-all duration-500">
+  <i class="fas fa-lightbulb text-blue-500 mt-0.5 flex-shrink-0 text-lg"></i>
+  <div class="flex-1">
+    <p class="text-sm font-semibold text-blue-800 mb-0.5">For best results: answer intuitively</p>
+    <p class="text-xs text-blue-600 leading-relaxed">
+      Choose the option that feels <em>most natural to you</em>, even if both sides sometimes apply.
+      There are no right or wrong answers. The more decisive your responses, the more accurate your personality profile.
+    </p>
+  </div>
+  <button onclick="document.getElementById('preTip').style.display='none'"
+          class="text-blue-400 hover:text-blue-600 text-xs mt-0.5 flex-shrink-0 transition" title="Dismiss">
+    <i class="fas fa-times"></i>
+  </button>
+</div>
+<!-- Keyboard shortcut hint (HCI: discoverability) -->
+<div class="max-w-2xl mx-auto mb-3 text-right">
+  <span class="text-xs text-gray-400"><i class="fas fa-keyboard mr-1"></i>Tip: use keys <kbd class="bg-gray-100 border border-gray-300 rounded px-1 py-0.5 font-mono text-xs">1</kbd>–<kbd class="bg-gray-100 border border-gray-300 rounded px-1 py-0.5 font-mono text-xs">7</kbd> to answer, <kbd class="bg-gray-100 border border-gray-300 rounded px-1 py-0.5 font-mono text-xs">←</kbd><kbd class="bg-gray-100 border border-gray-300 rounded px-1 py-0.5 font-mono text-xs">→</kbd> to navigate</span>
+</div>
+<div class="max-w-2xl mx-auto pb-10">
+
+  <!-- ── Global Progress Bar ───────────────────────────────────────────────── -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-5">
+    <div class="flex justify-between items-center mb-2">
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-semibold text-gray-700">
+          Question <span id="currentNum">—</span>
+          <span class="text-gray-400 font-normal">of {{ total_questions }}</span>
+        </span>
+        <span id="dimBadge" class="hidden badge-sm text-xs"></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-gray-400" id="answeredLabel">{{ answered_count }} answered</span>
+        <span class="text-sm font-bold text-blue-600" id="pctLabel">{{ progress_percent }}%</span>
+      </div>
+    </div>
+    <!-- Segmented progress: 4 coloured segments for E/I, S/N, T/F, J/P -->
+    <div class="flex gap-1 h-3 rounded-full overflow-hidden bg-gray-100">
+      <div id="seg-EI" class="h-full bg-blue-400 rounded-l-full transition-all duration-500" style="width:0%"></div>
+      <div id="seg-SN" class="h-full bg-purple-400 transition-all duration-500" style="width:0%"></div>
+      <div id="seg-TF" class="h-full bg-pink-400 transition-all duration-500" style="width:0%"></div>
+      <div id="seg-JP" class="h-full bg-amber-400 rounded-r-full transition-all duration-500" style="width:0%"></div>
+    </div>
+    <div class="flex justify-between mt-1">
+      <span class="text-xs text-blue-400 font-medium">E/I</span>
+      <span class="text-xs text-purple-400 font-medium">S/N</span>
+      <span class="text-xs text-pink-400 font-medium">T/F</span>
+      <span class="text-xs text-amber-400 font-medium">J/P</span>
+    </div>
+  </div>
+
+  <!-- ── Question Card ─────────────────────────────────────────────────────── -->
+  <div id="questionCard" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-5">
+    <!-- Colour top strip for current dimension -->
+    <div id="dimStrip" class="h-1.5 cat-EI transition-all duration-300"></div>
+
+    <div class="p-7">
+      <!-- Dimension label -->
+      <div class="flex items-center justify-between mb-4">
+        <span id="dimLabel" class="text-xs font-semibold uppercase tracking-wider text-gray-400"></span>
+        <span class="text-xs text-gray-300" id="qNumBadge"></span>
+      </div>
+
+      <!-- Question text -->
+      <p id="questionText"
+         class="text-xl font-semibold text-gray-800 leading-relaxed mb-8 min-h-[3rem]">
+        Loading questions…
+      </p>
+
+      <!-- ── Likert Scale ──────────────────────────────────────────────────── -->
+      <!-- HCI principle: 7-point Likert with labelled endpoints and coloured
+           poles gives the most accurate discrimination without cognitive overload.
+           SA=green, SD=red, neutral=grey mirrors traffic-light intuition. -->
+      <div id="likertWrap" class="likert-wrap" role="radiogroup" aria-label="Your response">
+        <!-- Populated by JS -->
+      </div>
+      <div class="pole-labels" id="poleLabels">
+        <span class="pole-label" id="poleA">Strongly Agree</span>
+        <span class="pole-label" id="poleB">Strongly Disagree</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Navigation ────────────────────────────────────────────────────────── -->
+  <div class="flex justify-between items-center" id="navBar">
+    <button id="prevBtn" onclick="prevQ()" disabled
+            class="flex items-center gap-2 px-5 py-2.5 border border-gray-300 text-gray-600
+                   rounded-xl hover:bg-gray-50 transition text-sm font-medium
+                   disabled:opacity-40 disabled:cursor-not-allowed">
+      <i class="fas fa-arrow-left text-xs"></i> Previous
+    </button>
+
+    <div class="flex items-center gap-2">
+      <button onclick="skipQ()"
+              class="px-4 py-2.5 text-gray-400 hover:text-gray-600 text-sm transition rounded-xl
+                     hover:bg-gray-50">
+        Skip
+      </button>
+      <button id="nextBtn" onclick="nextQ()" disabled
+              class="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl
+                     hover:bg-blue-700 transition text-sm font-semibold
+                     disabled:opacity-40 disabled:cursor-not-allowed">
+        Next <i class="fas fa-arrow-right text-xs"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Unanswered Warning ─────────────────────────────────────────────────── -->
+  <div id="unansweredWarn" class="hidden mt-5">
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
+      <i class="fas fa-triangle-exclamation text-amber-500 mt-0.5 flex-shrink-0"></i>
+      <div>
+        <div class="font-semibold text-amber-800 text-sm" id="unansweredMsg"></div>
+        <div class="flex gap-2 mt-3 flex-wrap">
+          <button onclick="goToFirstUnanswered()"
+                  class="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold
+                         hover:bg-amber-600 transition">
+            Answer remaining
+          </button>
+          <button onclick="doSubmit()"
+                  class="px-4 py-2 border border-amber-400 text-amber-700 rounded-lg text-sm
+                         font-semibold hover:bg-amber-50 transition">
+            Submit anyway
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Submit Section ────────────────────────────────────────────────────── -->
+  <div id="submitSection" class="hidden mt-5">
+    <div class="bg-green-50 border border-green-200 rounded-2xl p-8 text-center">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-circle-check text-green-500 text-3xl"></i>
+      </div>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">All {{ total_questions }} questions answered!</h3>
+      <p class="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
+        Your responses are saved. Click below to discover your personality type and unlock your career matches.
+      </p>
+      <button id="submitBtn" onclick="doSubmit()"
+              class="px-10 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white
+                     font-bold rounded-2xl shadow-lg hover:shadow-xl hover:from-green-600
+                     hover:to-emerald-700 transition text-base">
+        <i class="fas fa-paper-plane mr-2"></i> Get My Personality Results
+      </button>
+    </div>
+  </div>
+
+  <!-- ── HCI: Auto-save pulse indicator ────────────────────────────────────── -->
+  <div id="savePulse"
+       class="hidden fixed bottom-5 right-5 z-40 flex items-center gap-2
+              bg-green-600 text-white text-xs font-semibold px-3 py-2 rounded-xl
+              shadow-lg opacity-0 transition-opacity duration-400 pointer-events-none">
+    <i class="fas fa-cloud-arrow-up text-xs"></i> Answer saved
+  </div>
+
+  <!-- ── Loading Overlay ────────────────────────────────────────────────────── -->
+  <div id="loadingOverlay"
+       class="hidden fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+    <div class="text-center bg-white rounded-2xl shadow-xl p-8 max-w-sm mx-4">
+      <div class="spinner mx-auto mb-4" style="width:44px;height:44px;border-width:4px"></div>
+      <p class="text-gray-800 font-bold text-lg">Analysing your responses…</p>
+      <p class="text-gray-400 text-sm mt-1">Calculating your MBTI personality profile</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{# ─── MUST be first: json_script injects <script id="questions-json"> into the  #}
+{# DOM before any JS runs. The IIFE below reads it immediately on parse.          #}
+{# Placing this AFTER </script> causes getElementById to return null → QUESTIONS=[] #}
+{{ questions_json|json_script:"questions-json" }}
+<script>
+// ─── Constants ────────────────────────────────────────────────────────────────
+const CSRF       = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const SESSION_ID = {{ session.id }};
+const TOTAL      = {{ total_questions }};
+
+// Dimension display config
+const DIM_CFG = {
+  EI: { label:'Extraversion / Introversion', poleA:'Extraversion', poleB:'Introversion', cls:'cat-EI' },
+  SN: { label:'Sensing / Intuition',         poleA:'Sensing',      poleB:'Intuition',    cls:'cat-SN' },
+  TF: { label:'Thinking / Feeling',          poleA:'Thinking',     poleB:'Feeling',      cls:'cat-TF' },
+  JP: { label:'Judging / Perceiving',        poleA:'Judging',      poleB:'Perceiving',   cls:'cat-JP' },
+};
+
+// Likert choice visual classes (positive value → A-pole = first option)
+const CHOICE_STYLE = [
+  { cls:'agree-s',   label:'Strongly\nAgree',    bg:'#d1fae5' },
+  { cls:'agree',     label:'Agree',              bg:'#f0fdf4' },
+  { cls:'agree',     label:'Slightly\nAgree',    bg:'#f0fdf4' },
+  { cls:'neutral',   label:'Neutral',            bg:'#f9fafb' },
+  { cls:'disagree',  label:'Slightly\nDisagree', bg:'#fff1f2' },
+  { cls:'disagree',  label:'Disagree',           bg:'#fff1f2' },
+  { cls:'disagree-s',label:'Strongly\nDisagree', bg:'#fee2e2' },
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+const QUESTIONS  = [];
+const serverSaved = new Set({{ answered_ids|safe }});
+// responses tracks actual answerId chosen in this browser session
+const responses  = {};
+// Pre-mark server-saved questions as answered (sentinel value)
+serverSaved.forEach(id => { responses[id] = '__saved__'; });
+
+let currentIdx = 0;
+let saveTimer  = null;
+
+// ─── Load questions from json_script tag ──────────────────────────────────────
+// Primary path: json_script is placed BEFORE this <script> tag (see template),
+// so getElementById finds it immediately during parse.
+// Fallback path: DOMContentLoaded catches any edge case where the element
+// isn't ready yet (e.g. template caching or unusual render order).
+function _loadQuestionsFromDOM() {
+  const el = document.getElementById('questions-json');
+  if (!el) {
+    console.error('CareerCompass: #questions-json element not found. Questions will not load.');
+    return;
+  }
+  try {
+    const data = JSON.parse(el.textContent);
+    if (!Array.isArray(data) || data.length === 0) {
+      console.error('CareerCompass: questions-json is empty or invalid.');
+      return;
+    }
+    // Only push if not already populated (avoid double-load on DOMContentLoaded)
+    if (QUESTIONS.length === 0) {
+      data.forEach(q => QUESTIONS.push(q));
+    }
+  } catch(e) {
+    console.error('CareerCompass: Questions JSON parse error', e);
+  }
+}
+
+// Immediate parse-time load (works when json_script is before this <script>)
+_loadQuestionsFromDOM();
+
+// DOMContentLoaded fallback (catches any render-order edge cases)
+if (QUESTIONS.length === 0) {
+  document.addEventListener('DOMContentLoaded', function() {
+    _loadQuestionsFromDOM();
+    if (QUESTIONS.length > 0) {
+      renderQuestion(currentIdx);
+      updateProgress();
+    }
+  });
+}
+
+// ─── Per-dimension answered counts ───────────────────────────────────────────
+function dimCounts() {
+  const counts = { EI:0, SN:0, TF:0, JP:0 };
+  const totals = { EI:0, SN:0, TF:0, JP:0 };
+  QUESTIONS.forEach(q => {
+    totals[q.category] = (totals[q.category] || 0) + 1;
+    if (responses[q.id]) counts[q.category] = (counts[q.category] || 0) + 1;
+  });
+  return { counts, totals };
+}
+
+// ─── Update segmented progress bar ────────────────────────────────────────────
+function updateProgress() {
+  const { counts, totals } = dimCounts();
+  const answered = Object.values(counts).reduce((a,b)=>a+b,0);
+  const pct = TOTAL > 0 ? Math.min(100, Math.round((answered / TOTAL) * 100)) : 0;
+
+  document.getElementById('pctLabel').textContent      = pct + '%';
+  document.getElementById('answeredLabel').textContent = answered + ' answered';
+
+  // Segmented bars — each dimension occupies proportional width
+  ['EI','SN','TF','JP'].forEach(dim => {
+    const total    = totals[dim] || 1;
+    const done     = counts[dim] || 0;
+    const segWidth = ((total / TOTAL) * 100).toFixed(1);
+    const fillPct  = Math.round((done / total) * 100);
+    const el       = document.getElementById('seg-' + dim);
+    if (el) {
+      el.style.width = segWidth + '%';
+      el.style.opacity = fillPct > 0 ? (0.4 + fillPct / 150).toFixed(2) : '0.2';
+    }
+  });
+}
+
+// ─── Render a question card ───────────────────────────────────────────────────
+function renderQ(animate=true) {
+  if (currentIdx >= QUESTIONS.length) { checkCompletion(); return; }
+  const q  = QUESTIONS[currentIdx];
+  const cfg = DIM_CFG[q.category] || { label:q.category, poleA:'', poleB:'', cls:'cat-EI' };
+
+  if (animate) {
+    const card = document.getElementById('questionCard');
+    card.classList.add('fade-out');
+    setTimeout(() => { _fillCard(q, cfg); card.classList.remove('fade-out'); }, 220);
+  } else {
+    _fillCard(q, cfg);
+  }
+}
+
+function _fillCard(q, cfg) {
+  // Colour strip
+  document.getElementById('dimStrip').className = 'h-1.5 transition-all duration-300 ' + cfg.cls;
+
+  // Labels
+  document.getElementById('dimLabel').textContent  = cfg.label;
+  document.getElementById('qNumBadge').textContent = (currentIdx + 1) + ' / ' + QUESTIONS.length;
+  document.getElementById('currentNum').textContent = currentIdx + 1;
+  document.getElementById('poleA').textContent     = cfg.poleA;
+  document.getElementById('poleB').textContent     = cfg.poleB;
+
+  // Dimension badge
+  const badge = document.getElementById('dimBadge');
+  badge.textContent = q.category;
+  badge.className   = `badge-sm text-xs px-2 py-0.5 ${
+    q.category === 'EI' ? 'bg-blue-100 text-blue-700' :
+    q.category === 'SN' ? 'bg-purple-100 text-purple-700' :
+    q.category === 'TF' ? 'bg-pink-100 text-pink-700' :
+                           'bg-amber-100 text-amber-700'
+  }`;
+  badge.classList.remove('hidden');
+
+  // Question text
+  document.getElementById('questionText').textContent = q.text;
+
+  // Sort choices: most positive value first (Strongly Agree → A-pole)
+  const sorted  = [...q.choices].sort((a,b) => b.value - a.value);
+  const wrap    = document.getElementById('likertWrap');
+  wrap.innerHTML = '';
+
+  sorted.forEach((c, i) => {
+    const style  = CHOICE_STYLE[i] || CHOICE_STYLE[3];
+    const isSelected = responses[q.id] === c.id;
+
+    const btn   = document.createElement('button');
+    btn.type    = 'button';
+    btn.role    = 'radio';
+    btn.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+    btn.className = `likert-option ${style.cls} ${isSelected ? 'selected' : ''}`;
+    btn.dataset.answerId = c.id;
+    btn.dataset.value    = c.value;
+
+    // Label lines
+    const lines = style.label.split('\n');
+    btn.innerHTML = `
+      <div class="likert-dot"></div>
+      ${lines.map(l => `<span class="likert-label">${l}</span>`).join('')}
+    `;
+
+    btn.addEventListener('click', () => selectAnswer(q.id, c.id, btn));
+    btn.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+    });
+    btn.tabIndex = 0;
+    wrap.appendChild(btn);
+  });
+
+  // Nav state
+  document.getElementById('prevBtn').disabled = currentIdx === 0;
+  document.getElementById('nextBtn').disabled = !responses[q.id];
+}
+
+// ─── Select an answer ─────────────────────────────────────────────────────────
+function selectAnswer(questionId, answerId, clickedBtn) {
+  responses[questionId] = answerId;
+  serverSaved.add(questionId);
+
+  document.querySelectorAll('.likert-option').forEach(b => {
+    b.classList.remove('selected');
+    b.setAttribute('aria-checked', 'false');
+  });
+  clickedBtn.classList.add('selected');
+  clickedBtn.setAttribute('aria-checked', 'true');
+  document.getElementById('nextBtn').disabled = false;
+
+  updateProgress();
+
+  // Save to server (debounced)
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    fetch(`/assessments/api/sessions/${SESSION_ID}/submit_response/`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
+      body: JSON.stringify({question_id: questionId, answer_id: answerId, response_time: 0}),
+    })
+    .then(r => { if (r.ok) showSavePulse(); })
+    .catch(() => {});
+  }, 300);
+
+  // Auto-advance after brief pause (allows user to see their selection)
+  setTimeout(() => {
+    if (currentIdx < QUESTIONS.length - 1) {
+      currentIdx++;
+      renderQ(true);
+    } else {
+      checkCompletion();
+    }
+  }, 420);
+}
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+function nextQ() {
+  if (currentIdx < QUESTIONS.length - 1) { currentIdx++; renderQ(); }
+  else checkCompletion();
+}
+
+function prevQ() {
+  if (currentIdx > 0) { currentIdx--; renderQ(); }
+}
+
+function skipQ() {
+  if (currentIdx < QUESTIONS.length - 1) { currentIdx++; renderQ(); }
+  else checkCompletion();
+}
+
+function goToFirstUnanswered() {
+  const idx = QUESTIONS.findIndex(q => !responses[q.id]);
+  if (idx !== -1) {
+    currentIdx = idx;
+    document.getElementById('unansweredWarn').classList.add('hidden');
+    document.getElementById('questionCard').classList.remove('hidden');
+    document.getElementById('navBar').classList.remove('hidden');
+    renderQ(false);
+  }
+}
+
+// ─── Completion check ─────────────────────────────────────────────────────────
+function checkCompletion() {
+  const unanswered = QUESTIONS.filter(q => !responses[q.id]);
+  if (unanswered.length === 0) {
+    document.getElementById('questionCard').classList.add('hidden');
+    document.getElementById('navBar').classList.add('hidden');
+    document.getElementById('unansweredWarn').classList.add('hidden');
+    document.getElementById('submitSection').classList.remove('hidden');
+    updateProgress();
+  } else {
+    document.getElementById('unansweredMsg').textContent =
+      `You have ${unanswered.length} unanswered question${unanswered.length === 1 ? '' : 's'}. ` +
+      `You can go back and answer them, or submit with these skipped.`;
+    document.getElementById('unansweredWarn').classList.remove('hidden');
+  }
+}
+
+// ─── Submit ───────────────────────────────────────────────────────────────────
+function doSubmit() {
+  const btn = document.getElementById('submitBtn');
+  if (btn) btn.disabled = true;
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+
+  fetch(`/assessments/api/sessions/${SESSION_ID}/complete_assessment/`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
+    body: '{}',
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.id || d.personality_type) {
+      window.location.href = '/assessments/results/';
+    } else {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      if (btn) btn.disabled = false;
+      alert('Error: ' + (d.error || 'Could not complete. Please try again.'));
+    }
+  })
+  .catch(() => {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    if (btn) btn.disabled = false;
+    alert('Network error. Please check your connection and try again.');
+  });
+}
+
+// ─── Keyboard navigation ──────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const q = QUESTIONS[currentIdx];
+  if (!q) return;
+
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault(); nextQ();
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault(); prevQ();
+  } else if (e.key >= '1' && e.key <= '7') {
+    // Number keys 1-7 select choices in order (left = 1, right = 7)
+    const btns = document.querySelectorAll('.likert-option');
+    const idx  = parseInt(e.key) - 1;
+    if (btns[idx]) btns[idx].click();
+  }
+});
+
+// ─── HCI: Warn before accidental page exit ────────────────────────────────────
+// Only warn if there are unsaved answers (progress > 0 but < 100%)
+window.addEventListener('beforeunload', e => {
+  const answered = Object.keys(answers).length;
+  const total    = QUESTIONS.length;
+  if (answered > 0 && answered < total) {
+    e.preventDefault();
+    e.returnValue = 'Your assessment progress will be lost if you leave. Are you sure?';
+  }
+});
+
+// ─── HCI: Visual auto-save pulse indicator ───────────────────────────────────
+function showSavePulse() {
+  const el = document.getElementById('savePulse');
+  if (!el) return;
+  el.classList.remove('hidden', 'opacity-0');
+  el.classList.add('opacity-100');
+  setTimeout(() => {
+    el.classList.replace('opacity-100', 'opacity-0');
+    setTimeout(() => el.classList.add('hidden'), 400);
+  }, 1800);
+}
+
+// Patch submitAnswer to also show save pulse
+const _origSubmitAnswer = typeof submitAnswer !== 'undefined' ? submitAnswer : null;
+
+// ─── Initialise ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  if (QUESTIONS.length === 0) {
+    document.getElementById('questionText').textContent =
+      'No questions found. Please ask your administrator to run: python manage.py load_mbti_data';
+    return;
+  }
+
+  // Start from first unanswered question (correct after page refresh)
+  const firstUnanswered = QUESTIONS.findIndex(q => !serverSaved.has(q.id));
+  if (firstUnanswered === -1) {
+    // All answered
+    checkCompletion();
+  } else {
+    currentIdx = firstUnanswered;
+    renderQ(false);
+  }
+  updateProgress();
+});
+</script>
+{% endblock %}

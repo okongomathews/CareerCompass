@@ -1,0 +1,750 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ career.name }} - CareerCompass Kenya{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6 text-sm text-gray-600" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'dashboard' %}" class="inline-flex items-center hover:text-blue-600">
+                    <i class="fas fa-home mr-2"></i> Home
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                    <a href="{% url 'recommendations:public_career_list' %}" class="ml-2 hover:text-blue-600">Careers</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                    <span class="ml-2 text-gray-800 font-medium">{{ career.name }}</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Career Header -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="p-8">
+            <div class="flex flex-col md:flex-row md:items-start justify-between mb-6">
+                <div class="flex-1">
+                    <!-- Career Title & Badges -->
+                    <div class="flex flex-wrap items-center gap-3 mb-3">
+                        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">{{ career.name }}</h1>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="badge-md 
+                                {% if career.kenyan_market_demand == 'very_high' %}bg-red-100 text-red-800
+                                {% elif career.kenyan_market_demand == 'high' %}bg-orange-100 text-orange-800
+                                {% elif career.kenyan_market_demand == 'medium' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ career.get_kenyan_market_demand_display }}
+                            </span>
+                            {% if career.is_kenyan_focused %}
+                            <span class="kenyan-badge badge-md">
+                                <i class="fas fa-flag mr-1"></i> Kenyan Focused
+                            </span>
+                            {% endif %}
+                            <span class="badge-md bg-purple-100 text-purple-800">
+                                {{ career.get_category_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Career Description -->
+                    <p class="text-gray-700 text-lg mb-6">{{ career.description }}</p>
+                    
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-gradient-blue rounded-lg p-4 text-white">
+                            <div class="text-2xl font-bold">
+                                {% if career.average_salary %}
+                                KES {{ career.average_salary|floatformat:0 }}
+                                {% else %}
+                                Competitive
+                                {% endif %}
+                            </div>
+                            <div class="text-sm opacity-90">Avg. Monthly Salary</div>
+                        </div>
+                        <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-4 text-white">
+                            <div class="text-2xl font-bold">{{ career.get_market_demand_trend_display }}</div>
+                            <div class="text-sm opacity-90">Market Trend</div>
+                        </div>
+                        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-4 text-white">
+                            <div class="text-2xl font-bold">
+                                {% if career.complexity_level == 'very_high' %}Advanced
+                                {% elif career.complexity_level == 'high' %}High
+                                {% elif career.complexity_level == 'medium' %}Medium
+                                {% else %}Entry{% endif %}
+                            </div>
+                            <div class="text-sm opacity-90">Complexity Level</div>
+                        </div>
+                        <div class="bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg p-4 text-white">
+                            <div class="text-2xl font-bold">{{ career.learning_duration|default:"3-5 years" }}</div>
+                            <div class="text-sm opacity-90">Typical Training</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Call to Action -->
+                <div class="md:w-80 mt-4 md:mt-0 md:ml-6">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                        <h3 class="font-semibold text-blue-800 mb-3">Get Personalized Insights</h3>
+                        <p class="text-blue-700 text-sm mb-4">
+                            Sign up to see how this career matches your personality, academics, and interests.
+                        </p>
+                        <div class="space-y-3">
+                            <a href="{% url 'register' %}" 
+                               class="block w-full text-center bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 btn-primary">
+                                <i class="fas fa-user-plus mr-2"></i> Sign Up Free
+                            </a>
+                            <a href="{% url 'login' %}" 
+                               class="block w-full text-center bg-white border border-blue-600 text-blue-600 py-3 rounded-lg font-medium hover:bg-blue-50">
+                                <i class="fas fa-sign-in-alt mr-2"></i> Login
+                            </a>
+                        </div>
+                        <p class="text-xs text-blue-600 mt-4 text-center">
+                            Free personality assessment included
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="mb-8">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8 overflow-x-auto custom-scrollbar">
+                <button onclick="showTab('overview')" 
+                        class="tab-button py-3 px-1 border-b-2 font-medium text-sm active"
+                        id="tab-overview">
+                    <i class="fas fa-info-circle mr-2"></i>Overview
+                </button>
+                <button onclick="showTab('education')" 
+                        class="tab-button py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700"
+                        id="tab-education">
+                    <i class="fas fa-graduation-cap mr-2"></i>Education
+                </button>
+                <button onclick="showTab('market')" 
+                        class="tab-button py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700"
+                        id="tab-market">
+                    <i class="fas fa-chart-line mr-2"></i>Market Info
+                </button>
+                <button onclick="showTab('skills')" 
+                        class="tab-button py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700"
+                        id="tab-skills">
+                    <i class="fas fa-tools mr-2"></i>Skills & Requirements
+                </button>
+                <button onclick="showTab('kenyan')" 
+                        class="tab-button py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700"
+                        id="tab-kenyan">
+                    <i class="fas fa-flag mr-2"></i>Kenyan Context
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="tab-content">
+        <!-- Overview Tab -->
+        <div id="tab-overview-content" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-8">
+                    <!-- Career Path -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Career Path</h3>
+                        {% if career.career_path %}
+                        <p class="text-gray-700">{{ career.career_path }}</p>
+                        {% else %}
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-blue-600 font-bold">1</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Education & Training</h4>
+                                    <p class="text-gray-600 text-sm mt-1">{{ career.education_requirements|default:"Complete relevant education and training programs." }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-green-600 font-bold">2</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Entry-Level Position</h4>
+                                    <p class="text-gray-600 text-sm mt-1">Start with junior roles to gain practical experience.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-purple-600 font-bold">3</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Career Progression</h4>
+                                    <p class="text-gray-600 text-sm mt-1">Advance to senior positions with experience and additional qualifications.</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Work Environment -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Work Environment</h3>
+                        {% if career.work_environment %}
+                        <p class="text-gray-700">{{ career.work_environment }}</p>
+                        {% else %}
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-3"></i>
+                                <div>
+                                    <div class="font-medium text-gray-800">Typical Work Hours</div>
+                                    <div class="text-gray-600 text-sm">{{ career.typical_work_hours|default:"Standard business hours, may include overtime" }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-building text-gray-400 mr-3"></i>
+                                <div>
+                                    <div class="font-medium text-gray-800">Work Setting</div>
+                                    <div class="text-gray-600 text-sm">Office, field work, or remote work depending on specific role</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-8">
+                    <!-- Required Subjects -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Recommended Subjects</h3>
+                        <div class="space-y-3">
+                            {% if career.required_subjects.all %}
+                            <div>
+                                <div class="text-sm text-gray-500 mb-1">Required for this career:</div>
+                                <div class="flex flex-wrap gap-2">
+                                    {% for subject in career.required_subjects.all %}
+                                    <span class="badge-md bg-blue-100 text-blue-800">
+                                        {{ subject.name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if career.recommended_subjects.all %}
+                            <div>
+                                <div class="text-sm text-gray-500 mb-1">Recommended subjects:</div>
+                                <div class="flex flex-wrap gap-2">
+                                    {% for subject in career.recommended_subjects.all %}
+                                    <span class="badge-md bg-green-100 text-green-800">
+                                        {{ subject.name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Growth Projection -->
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Growth Outlook</h3>
+                        {% if career.growth_projection %}
+                        <p class="text-gray-700 mb-3">{{ career.growth_projection }}</p>
+                        {% endif %}
+                        <div class="mt-4">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">Demand in Kenya</span>
+                                <span class="text-sm font-medium text-gray-700">{{ career.get_market_demand_display }}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="h-2.5 rounded-full 
+                                    {% if career.kenyan_market_demand == 'very_high' %}bg-red-600 w-full
+                                    {% elif career.kenyan_market_demand == 'high' %}bg-orange-500 w-4/5
+                                    {% elif career.kenyan_market_demand == 'medium' %}bg-blue-500 w-3/5
+                                    {% else %}bg-gray-500 w-2/5{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Education Tab -->
+        <div id="tab-education-content" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-8">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Education Requirements</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Minimum Education -->
+                    <div class="info-card bg-gray-50 p-6 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-3">Minimum Education</h4>
+                        <p class="text-gray-700 mb-4">{{ career.minimum_education|default:"KCSE Certificate with relevant subject combination" }}</p>
+                        
+                        <div class="mt-4">
+                            <h5 class="font-medium text-gray-700 mb-2">KCSE Requirements:</h5>
+                            <ul class="space-y-2">
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>Minimum grade of C+</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>Relevant subject combination</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>Good performance in key subjects</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Further Education -->
+                    <div class="info-card bg-blue-50 p-6 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-3">Further Education Pathways</h4>
+                        {% if career.education_requirements %}
+                        <p class="text-gray-700 mb-4">{{ career.education_requirements }}</p>
+                        {% else %}
+                        <div class="space-y-4">
+                            <div>
+                                <h5 class="font-medium text-gray-700">Diploma Programs (2-3 years)</h5>
+                                <p class="text-gray-600 text-sm">Technical training at polytechnics or colleges</p>
+                            </div>
+                            <div>
+                                <h5 class="font-medium text-gray-700">Bachelor's Degree (4+ years)</h5>
+                                <p class="text-gray-600 text-sm">University education with specialized focus</p>
+                            </div>
+                            <div>
+                                <h5 class="font-medium text-gray-700">Professional Certification</h5>
+                                <p class="text-gray-600 text-sm">Industry-specific certifications and licenses</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Kenyan Universities -->
+                {% if career.kenyan_universities %}
+                <div class="mt-8">
+                    <h4 class="font-semibold text-gray-800 mb-4">Kenyan Universities Offering Relevant Programs</h4>
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <p class="text-gray-700">{{ career.kenyan_universities }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Scholarships -->
+                {% if career.scholarships_available %}
+                <div class="mt-8">
+                    <h4 class="font-semibold text-gray-800 mb-4">Scholarship Opportunities</h4>
+                    <div class="bg-green-50 p-6 rounded-lg">
+                        <p class="text-green-800">{{ career.scholarships_available }}</p>
+                        <p class="text-green-700 text-sm mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Visit HELB and university websites for current scholarship information
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Market Info Tab -->
+        <div id="tab-market-content" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-8">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Market Information</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Salary Information -->
+                    <div class="space-y-6">
+                        <h4 class="text-xl font-semibold text-gray-800">Salary Information in Kenya</h4>
+                        
+                        <div class="space-y-4">
+                            {% if career.entry_level_salary %}
+                            <div class="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
+                                <div>
+                                    <div class="font-medium text-gray-800">Entry Level</div>
+                                    <div class="text-sm text-gray-600">0-2 years experience</div>
+                                </div>
+                                <div class="text-lg font-bold text-blue-700">
+                                    KES {{ career.entry_level_salary|floatformat:0 }}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if career.mid_level_salary %}
+                            <div class="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+                                <div>
+                                    <div class="font-medium text-gray-800">Mid Career</div>
+                                    <div class="text-sm text-gray-600">3-7 years experience</div>
+                                </div>
+                                <div class="text-lg font-bold text-green-700">
+                                    KES {{ career.mid_level_salary|floatformat:0 }}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if career.senior_level_salary %}
+                            <div class="flex justify-between items-center p-4 bg-purple-50 rounded-lg">
+                                <div>
+                                    <div class="font-medium text-gray-800">Senior Level</div>
+                                    <div class="text-sm text-gray-600">8+ years experience</div>
+                                </div>
+                                <div class="text-lg font-bold text-purple-700">
+                                    KES {{ career.senior_level_salary|floatformat:0 }}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if career.average_salary and not career.entry_level_salary %}
+                            <div class="flex justify-between items-center p-4 bg-yellow-50 rounded-lg">
+                                <div>
+                                    <div class="font-medium text-gray-800">Average Salary</div>
+                                    <div class="text-sm text-gray-600">Industry average</div>
+                                </div>
+                                <div class="text-lg font-bold text-yellow-700">
+                                    KES {{ career.average_salary|floatformat:0 }}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Market Analysis -->
+                    <div class="space-y-6">
+                        <h4 class="text-xl font-semibold text-gray-800">Market Analysis</h4>
+                        
+                        {% if career.kenyan_market_analysis %}
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <p class="text-gray-700">{{ career.kenyan_market_analysis }}</p>
+                        </div>
+                        {% else %}
+                        <div class="space-y-4">
+                            <div class="p-4 bg-orange-50 rounded-lg">
+                                <div class="font-medium text-gray-800 mb-2">Current Demand: {{ career.get_kenyan_market_demand_display }}</div>
+                                <p class="text-gray-600 text-sm">Based on current job market analysis in Kenya</p>
+                            </div>
+                            
+                            {% if career.growth_projection %}
+                            <div class="p-4 bg-green-50 rounded-lg">
+                                <div class="font-medium text-gray-800 mb-2">Growth Projection</div>
+                                <p class="text-gray-700">{{ career.growth_projection }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="p-4 bg-blue-50 rounded-lg">
+                                <div class="font-medium text-gray-800 mb-2">Trend: {{ career.get_market_demand_trend_display|default:"Stable" }}</div>
+                                <p class="text-gray-600 text-sm">Market demand is {{ career.market_demand_trend|default:"stable" }} in Kenya</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Top Employers -->
+                        {% if career.top_employers %}
+                        <div class="mt-6">
+                            <h5 class="font-medium text-gray-700 mb-2">Top Employers in Kenya:</h5>
+                            <p class="text-gray-600">{{ career.top_employers }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills & Requirements Tab -->
+        <div id="tab-skills-content" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-8">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Skills & Requirements</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Required Skills -->
+                    <div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-4">Required Skills</h4>
+                        {% if career.skills_required %}
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <div class="prose max-w-none">
+                                {{ career.skills_required|linebreaks }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="space-y-3">
+                            <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                                <i class="fas fa-cog text-blue-500 mr-3"></i>
+                                <span class="text-gray-700">Technical skills relevant to the field</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                                <i class="fas fa-users text-green-500 mr-3"></i>
+                                <span class="text-gray-700">Communication and teamwork abilities</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-purple-50 rounded-lg">
+                                <i class="fas fa-lightbulb text-purple-500 mr-3"></i>
+                                <span class="text-gray-700">Problem-solving and critical thinking</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-yellow-50 rounded-lg">
+                                <i class="fas fa-book text-yellow-500 mr-3"></i>
+                                <span class="text-gray-700">Continuous learning mindset</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Certifications & Requirements -->
+                    <div>
+                        <h4 class="text-xl font-semibold text-gray-800 mb-4">Certifications & Requirements</h4>
+                        {% if career.certifications %}
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <div class="prose max-w-none">
+                                {{ career.certifications|linebreaks }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="space-y-4">
+                            <div class="p-4 bg-orange-50 rounded-lg">
+                                <h5 class="font-medium text-gray-800 mb-1">Professional Certification</h5>
+                                <p class="text-gray-600 text-sm">Often required for career advancement</p>
+                            </div>
+                            <div class="p-4 bg-indigo-50 rounded-lg">
+                                <h5 class="font-medium text-gray-800 mb-1">Continuing Education</h5>
+                                <p class="text-gray-600 text-sm">Regular training to stay current in the field</p>
+                            </div>
+                            <div class="p-4 bg-teal-50 rounded-lg">
+                                <h5 class="font-medium text-gray-800 mb-1">Industry Standards</h5>
+                                <p class="text-gray-600 text-sm">Adherence to professional standards and ethics</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Career Complexity -->
+                <div class="mt-8">
+                    <h4 class="text-xl font-semibold text-gray-800 mb-4">Career Complexity</h4>
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-gray-700">Complexity Level:</span>
+                            <span class="badge-md
+                                {% if career.complexity_level == 'very_high' %}bg-red-100 text-red-800
+                                {% elif career.complexity_level == 'high' %}bg-orange-100 text-orange-800
+                                {% elif career.complexity_level == 'medium' %}bg-blue-100 text-blue-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ career.get_complexity_level_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                            <div class="h-3 rounded-full 
+                                {% if career.complexity_level == 'very_high' %}bg-red-600 w-full
+                                {% elif career.complexity_level == 'high' %}bg-orange-500 w-3/4
+                                {% elif career.complexity_level == 'medium' %}bg-blue-500 w-1/2
+                                {% else %}bg-green-500 w-1/4{% endif %}">
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between text-sm text-gray-500 mt-1">
+                            <span>Low</span>
+                            <span>Medium</span>
+                            <span>High</span>
+                            <span>Very High</span>
+                        </div>
+                        
+                        <p class="text-gray-600 text-sm mt-4">
+                            This indicates the level of education, training, and experience typically required for success in this career.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kenyan Context Tab -->
+        <div id="tab-kenyan-content" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-8">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Kenyan Context</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Market Analysis -->
+                    <div class="space-y-6">
+                        <h4 class="text-xl font-semibold text-gray-800">Kenyan Market Analysis</h4>
+                        
+                        {% if career.kenyan_market_analysis %}
+                        <div class="p-6 bg-blue-50 rounded-lg">
+                            <p class="text-gray-700">{{ career.kenyan_market_analysis }}</p>
+                        </div>
+                        {% else %}
+                        <div class="space-y-4">
+                            <div class="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-100">
+                                <h5 class="font-semibold text-blue-800 mb-2">Market Position in Kenya</h5>
+                                <p class="text-gray-700">This career is positioned as <strong>{{ career.get_kenyan_market_demand_display|lower }}</strong> in the Kenyan job market.</p>
+                            </div>
+                            
+                            <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                                <h5 class="font-semibold text-green-800 mb-2">Growth Potential</h5>
+                                <p class="text-gray-700">With Kenya's economic development, opportunities in this field are expected to {{ career.market_demand_trend|default:"grow" }}.</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Opportunities -->
+                    <div class="space-y-6">
+                        <h4 class="text-xl font-semibold text-gray-800">Opportunities in Kenya</h4>
+                        
+                        <div class="space-y-4">
+                            <!-- Universities -->
+                            {% if career.kenyan_universities %}
+                            <div class="p-4 bg-purple-50 rounded-lg">
+                                <h5 class="font-medium text-purple-800 mb-2">Available Programs</h5>
+                                <p class="text-gray-700">{{ career.kenyan_universities }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Employers -->
+                            {% if career.top_employers %}
+                            <div class="p-4 bg-orange-50 rounded-lg">
+                                <h5 class="font-medium text-orange-800 mb-2">Top Employers</h5>
+                                <p class="text-gray-700">{{ career.top_employers }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Scholarships -->
+                            {% if career.scholarships_available %}
+                            <div class="p-4 bg-green-50 rounded-lg">
+                                <h5 class="font-medium text-green-800 mb-2">Funding Opportunities</h5>
+                                <p class="text-green-700">{{ career.scholarships_available }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Kenyan Focus -->
+                            {% if career.is_kenyan_focused %}
+                            <div class="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+                                <div class="flex items-center">
+                                    <i class="fas fa-star text-yellow-500 mr-2"></i>
+                                    <h5 class="font-medium text-yellow-800">Kenyan-Focused Career</h5>
+                                </div>
+                                <p class="text-gray-700 mt-2">This career is particularly relevant to Kenya's development needs and economic priorities.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Careers -->
+                {% if related_careers %}
+                <div class="mt-8">
+                    <h4 class="text-xl font-semibold text-gray-800 mb-4">Related Careers in Kenya</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for related in related_careers %}
+                        <a href="{% url 'recommendations:public_career_detail' related.id %}" 
+                           class="bg-gray-50 hover:bg-gray-100 rounded-lg p-4 transition duration-200 card-hover">
+                            <div class="font-medium text-gray-800">{{ related.name }}</div>
+                            <div class="text-sm text-gray-600 mt-1">{{ related.get_category_display }}</div>
+                            <div class="flex items-center mt-2">
+                                <span class="badge-sm 
+                                    {% if related.kenyan_market_demand == 'very_high' %}bg-red-100 text-red-800
+                                    {% elif related.kenyan_market_demand == 'high' %}bg-orange-100 text-orange-800
+                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {{ related.get_kenyan_market_demand_display }}
+                                </span>
+                                <span class="text-xs text-gray-500 ml-2">
+                                    {% if related.average_salary %}
+                                    KES {{ related.average_salary|floatformat:0 }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action Footer -->
+    <div class="mt-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white">
+        <h2 class="text-2xl font-bold mb-4">Want to See How This Career Fits You?</h2>
+        <p class="text-blue-100 mb-6 max-w-2xl mx-auto">
+            Get a personalized compatibility score based on your personality, academic strengths, and interests.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{% url 'register' %}" 
+               class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition duration-300 btn-primary">
+                <i class="fas fa-chart-line mr-2"></i> Get Personalized Score
+            </a>
+            <a href="{% url 'recommendations:public_career_list' %}" 
+               class="bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition duration-300">
+                <i class="fas fa-search mr-2"></i> Explore More Careers
+            </a>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Tab Management
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.add('hidden');
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+            button.classList.remove('border-blue-500', 'text-blue-600');
+            button.classList.add('border-transparent', 'text-gray-500');
+        });
+        
+        // Show selected tab
+        const tabContent = document.getElementById(`tab-${tabName}-content`);
+        const tabButton = document.getElementById(`tab-${tabName}`);
+        
+        if (tabContent && tabButton) {
+            tabContent.classList.remove('hidden');
+            tabContent.classList.add('active');
+            
+            tabButton.classList.add('active', 'border-blue-500', 'text-blue-600');
+            tabButton.classList.remove('border-transparent', 'text-gray-500');
+        }
+    }
+    
+    // Initialize first tab as active
+    document.addEventListener('DOMContentLoaded', function() {
+        showTab('overview');
+    });
+    
+    // Share functionality
+    function shareCareer() {
+        const url = window.location.href;
+        const title = '{{ career.name }} - CareerCompass Kenya';
+        const text = 'Check out this career opportunity on CareerCompass Kenya';
+        
+        if (navigator.share) {
+            navigator.share({
+                title: title,
+                text: text,
+                url: url,
+            });
+        } else {
+            // Fallback: Copy to clipboard
+            navigator.clipboard.writeText(`${title}\n${text}\n${url}`).then(() => {
+                alert('Link copied to clipboard!');
+            });
+        }
+    }
+    
+    // Print functionality
+    function printCareer() {
+        window.print();
+    }
+</script>
+{% endblock %}
+{% endblock %}

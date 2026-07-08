@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Career Reports – CareerCompass Kenya{% endblock %}
+{% block page_title %}Career Reports (PDF){% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+  <!-- Page header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+    <div>
+      <h2 class="text-xl font-bold text-gray-800">Student Career Reports</h2>
+      <p class="text-sm text-gray-500 mt-0.5">
+        Search for a student, then click <strong>Download PDF</strong> to generate their personalised career report.
+      </p>
+    </div>
+    <a href="{% url 'analytics:assessment_report' %}"
+       class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+      <i class="fas fa-chart-bar"></i> Assessment Reports
+    </a>
+  </div>
+
+  <!-- Filter form -->
+  <form method="GET" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <!-- Search -->
+      <div class="lg:col-span-2">
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+          <i class="fas fa-search mr-1 text-gray-400"></i>Search Student
+        </label>
+        <input type="text" name="q" value="{{ search }}"
+               placeholder="Name, username or email…"
+               class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+      </div>
+
+      <!-- School -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+          <i class="fas fa-school mr-1 text-gray-400"></i>School
+        </label>
+        <select name="school"
+                class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition">
+          <option value="">All Schools</option>
+          {% for school in schools %}
+          <option value="{{ school.id }}" {% if selected_school == school.id|stringformat:'s' %}selected{% endif %}>
+            {{ school.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- MBTI Type -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+          <i class="fas fa-brain mr-1 text-gray-400"></i>MBTI Type
+        </label>
+        <select name="mbti"
+                class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition">
+          <option value="">All Types</option>
+          {% for mtype in mbti_types %}
+          <option value="{{ mtype }}" {% if selected_mbti == mtype %}selected{% endif %}>{{ mtype }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-4">
+      <button type="submit"
+              class="px-5 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+        <i class="fas fa-filter mr-1.5"></i>Apply Filters
+      </button>
+      <a href="{% url 'analytics:student_report_list' %}"
+         class="px-5 py-2 border border-gray-300 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">
+        <i class="fas fa-times mr-1.5"></i>Clear
+      </a>
+    </div>
+  </form>
+
+  <!-- Results count -->
+  <p class="text-sm text-gray-500 mb-3">
+    Showing <span class="font-semibold text-gray-700">{{ profiles|length }}</span>
+    student{{ profiles|length|pluralize }} with completed assessments.
+  </p>
+
+  {% if profiles %}
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b border-gray-100">
+        <tr>
+          <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Student</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">School</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">MBTI</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Confidence</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Completed</th>
+          <th class="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for profile in profiles %}
+        <tr class="hover:bg-gray-50 transition">
+
+          <!-- Name + username -->
+          <td class="px-5 py-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                {{ profile.user.first_name|first|upper }}{{ profile.user.last_name|first|upper }}
+              </div>
+              <div>
+                <div class="font-semibold text-gray-800">{{ profile.user.get_full_name|default:profile.user.username }}</div>
+                <div class="text-xs text-gray-400">@{{ profile.user.username }}</div>
+              </div>
+            </div>
+          </td>
+
+          <!-- School -->
+          <td class="px-4 py-3.5 text-gray-600 hidden sm:table-cell">
+            {{ profile.school.name|default:"—" }}
+          </td>
+
+          <!-- MBTI -->
+          <td class="px-4 py-3.5 hidden md:table-cell">
+            {% if profile.assessmentresult %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold">
+              <i class="fas fa-brain text-xs"></i>
+              {{ profile.assessmentresult.personality_type.mbti_type }}
+            </span>
+            {% else %}—{% endif %}
+          </td>
+
+          <!-- Confidence -->
+          <td class="px-4 py-3.5 hidden lg:table-cell">
+            {% if profile.assessmentresult %}
+            {% with conf=profile.assessmentresult.get_confidence_percent %}
+            <div class="flex items-center gap-2">
+              <div class="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full rounded-full
+                  {% if conf >= 70 %}bg-green-500{% elif conf >= 40 %}bg-amber-500{% else %}bg-red-400{% endif %}"
+                  style="width: {{ conf }}%"></div>
+              </div>
+              <span class="text-xs text-gray-600 font-medium">{{ conf }}%</span>
+            </div>
+            {% endwith %}
+            {% else %}—{% endif %}
+          </td>
+
+          <!-- Completed date -->
+          <td class="px-4 py-3.5 text-xs text-gray-500 hidden lg:table-cell">
+            {% if profile.assessmentresult %}
+              {{ profile.assessmentresult.created_at|date:"d M Y" }}
+            {% else %}—{% endif %}
+          </td>
+
+          <!-- Actions -->
+          <td class="px-5 py-3.5 text-right">
+            <a href="{% url 'analytics:career_report_pdf' student_id=profile.id %}"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition">
+              <i class="fas fa-file-pdf"></i>
+              <span class="hidden sm:inline">Download PDF</span>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-file-circle-question text-gray-400 text-2xl"></i>
+    </div>
+    <h3 class="font-bold text-gray-700 mb-2">No students found</h3>
+    <p class="text-sm text-gray-500">
+      {% if search or selected_school or selected_mbti %}
+        No students match your current filters.
+        <a href="{% url 'analytics:student_report_list' %}" class="text-blue-600 font-semibold hover:underline">Clear filters</a>
+      {% else %}
+        No students have completed an assessment yet.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

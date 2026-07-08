@@ -1,0 +1,435 @@
+{% extends 'base.html' %}
+
+{% block title %}Kenyan Job Market Trends - CareerCompass Kenya{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Hero Section -->
+    <div class="text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold text-blue-800 mb-4">
+            Kenyan Job Market Trends 2024
+        </h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            Insights into the fastest-growing careers, salary trends, and market demand in Kenya
+        </p>
+        <div class="mt-6 flex flex-wrap justify-center gap-3">
+            <span class="badge-sm bg-blue-100 text-blue-800">
+                <i class="fas fa-sync-alt mr-1"></i> Updated Monthly
+            </span>
+            <span class="badge-sm bg-green-100 text-green-800">
+                <i class="fas fa-chart-line mr-1"></i> Data-Driven Insights
+            </span>
+            <span class="badge-sm bg-purple-100 text-purple-800">
+                <i class="fas fa-flag mr-1"></i> Kenyan Focus
+            </span>
+        </div>
+    </div>
+
+    <!-- Market Overview -->
+    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-8 mb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+                <h2 class="text-2xl font-bold text-blue-900 mb-4">Kenyan Job Market Overview</h2>
+                <p class="text-blue-800 mb-6">
+                    Kenya's job market is evolving rapidly with technology adoption, economic diversification, 
+                    and government initiatives creating new opportunities. Understanding these trends is crucial 
+                    for making informed career decisions.
+                </p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="stat-card bg-white rounded-lg p-4 text-center shadow">
+                        <div class="text-2xl font-bold text-green-600">5.8%</div>
+                        <div class="text-sm text-gray-600">GDP Growth (2023)</div>
+                    </div>
+                    <div class="stat-card bg-white rounded-lg p-4 text-center shadow">
+                        <div class="text-2xl font-bold text-blue-600">15%</div>
+                        <div class="text-sm text-gray-600">Youth Employment Growth</div>
+                    </div>
+                    <div class="stat-card bg-white rounded-lg p-4 text-center shadow">
+                        <div class="text-2xl font-bold text-purple-600">2.3M</div>
+                        <div class="text-sm text-gray-600">New Jobs Created (2023)</div>
+                    </div>
+                    <div class="stat-card bg-white rounded-lg p-4 text-center shadow">
+                        <div class="text-2xl font-bold text-orange-600">8.5%</div>
+                        <div class="text-sm text-gray-600">Unemployment Rate</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h3 class="font-semibold text-gray-800 mb-4">Key Market Drivers</h3>
+                <div class="space-y-3">
+                    <div class="flex items-start">
+                        <div class="category-icon bg-blue-100 text-blue-600 mr-3">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Digital Transformation</div>
+                            <p class="text-gray-600 text-sm">Increased tech adoption across all sectors</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="category-icon bg-green-100 text-green-600 mr-3">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Public-Private Partnerships</div>
+                            <p class="text-gray-600 text-sm">Collaboration driving innovation and growth</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="category-icon bg-purple-100 text-purple-600 mr-3">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Education Reform</div>
+                            <p class="text-gray-600 text-sm">Competency-based curriculum implementation</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="category-icon bg-yellow-100 text-yellow-600 mr-3">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Manufacturing Agenda</div>
+                            <p class="text-gray-600 text-sm">Big 4 Agenda driving industrial growth</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <!-- Fastest Growing Sectors -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Fastest Growing Sectors</h2>
+                    <span class="text-sm text-gray-500">Growth Rate</span>
+                </div>
+                
+                <div class="space-y-6">
+                    <!-- Technology Sector -->
+                    <div class="trend-card p-4 border border-gray-200 rounded-lg hover:border-blue-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-microchip text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Technology & ICT</h3>
+                                    <p class="text-sm text-gray-600">Software, Cybersecurity, Data Science</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-green-600">30%</div>
+                                <div class="text-sm text-gray-500">Annual Growth</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-map-marker-alt mr-1"></i>
+                            <span>Nairobi, Mombasa, Kisumu hubs</span>
+                        </div>
+                        <div class="mt-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Market Demand</span>
+                                <span class="font-medium text-red-600">Very High</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-red-600 h-2 rounded-full" style="width: 95%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Healthcare Sector -->
+                    <div class="trend-card p-4 border border-gray-200 rounded-lg hover:border-green-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-heartbeat text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Healthcare</h3>
+                                    <p class="text-sm text-gray-600">Medicine, Nursing, Medical Technology</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-green-600">25%</div>
+                                <div class="text-sm text-gray-500">Annual Growth</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-map-marker-alt mr-1"></i>
+                            <span>Nationwide, especially urban centers</span>
+                        </div>
+                        <div class="mt-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Market Demand</span>
+                                <span class="font-medium text-orange-600">High</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-orange-500 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Renewable Energy -->
+                    <div class="trend-card p-4 border border-gray-200 rounded-lg hover:border-yellow-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-sun text-yellow-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Renewable Energy</h3>
+                                    <p class="text-sm text-gray-600">Solar, Wind, Green Technology</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-green-600">40%</div>
+                                <div class="text-sm text-gray-500">Annual Growth</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-map-marker-alt mr-1"></i>
+                            <span>Rift Valley, Coast, National projects</span>
+                        </div>
+                        <div class="mt-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Market Demand</span>
+                                <span class="font-medium text-blue-600">Growing</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Agribusiness -->
+                    <div class="trend-card p-4 border border-gray-200 rounded-lg hover:border-emerald-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-tractor text-emerald-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Agribusiness</h3>
+                                    <p class="text-sm text-gray-600">Smart Farming, Food Processing</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-green-600">20%</div>
+                                <div class="text-sm text-gray-500">Annual Growth</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-map-marker-alt mr-1"></i>
+                            <span>Rural & peri-urban areas nationwide</span>
+                        </div>
+                        <div class="mt-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Market Demand</span>
+                                <span class="font-medium text-emerald-600">Stable</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-emerald-500 h-2 rounded-full" style="width: 65%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salary Insights -->
+        <div>
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Salary Insights</h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-700 mb-2">Highest Paying Entry-Level</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Software Developer</span>
+                                <span class="font-semibold text-green-600">KES 120K</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Data Analyst</span>
+                                <span class="font-semibold text-green-600">KES 100K</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Registered Nurse</span>
+                                <span class="font-semibold text-green-600">KES 80K</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Digital Marketer</span>
+                                <span class="font-semibold text-green-600">KES 70K</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-6 border-t">
+                        <h3 class="font-semibold text-gray-700 mb-2">Fastest Salary Growth</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">AI Specialist</span>
+                                <span class="text-sm text-green-600">+35% yearly</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Cybersecurity</span>
+                                <span class="text-sm text-green-600">+30% yearly</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Renewable Energy</span>
+                                <span class="text-sm text-green-600">+25% yearly</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Fintech</span>
+                                <span class="text-sm text-green-600">+22% yearly</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="salary-range rounded-lg p-4 mt-6">
+                        <h3 class="font-semibold text-white mb-2">Average Salary Range</h3>
+                        <div class="flex justify-between text-white mb-2">
+                            <span>Entry Level</span>
+                            <span>KES 50K - 120K</span>
+                        </div>
+                        <div class="flex justify-between text-white mb-2">
+                            <span>Mid Career</span>
+                            <span>KES 120K - 300K</span>
+                        </div>
+                        <div class="flex justify-between text-white">
+                            <span>Senior Level</span>
+                            <span>KES 300K - 800K+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Facts -->
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Quick Facts</h2>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="text-purple-600 mr-3">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">60% of Jobs</div>
+                            <p class="text-sm text-gray-600">Require technical/vocational skills</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="text-blue-600 mr-3">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">40,000+ Tech Jobs</div>
+                            <p class="text-sm text-gray-600">Projected in Kenya by 2025</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="text-green-600 mr-3">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">75% Graduates</div>
+                            <p class="text-sm text-gray-600">From Kenyan universities find jobs within 1 year</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="text-yellow-600 mr-3">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Public-Private Growth</div>
+                            <p class="text-sm text-gray-600">Partnerships creating 30% of new jobs</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emerging Technologies -->
+    <div class="bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-8 mb-12">
+        <h2 class="text-2xl font-bold text-green-900 mb-6">Emerging Technologies in Kenya</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-lg p-6 shadow">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-brain text-purple-600"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Artificial Intelligence</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">AI adoption growing in finance, agriculture, and healthcare sectors</p>
+                <div class="text-xs text-gray-500">Skills: Python, Machine Learning, Data Analysis</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-shield-alt text-blue-600"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Cybersecurity</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">Critical need as digital transactions increase across Kenya</p>
+                <div class="text-xs text-gray-500">Skills: Network Security, Ethical Hacking, Risk Management</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-leaf text-green-600"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Green Technology</h3>
+                </div>
+                <p class="text-gray-600 text-sm mb-3">Renewable energy and sustainable solutions gaining traction</p>
+                <div class="text-xs text-gray-500">Skills: Solar Installation, Energy Management, Sustainability</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Regional Opportunities -->
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-12">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Regional Opportunities Across Kenya</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="border border-blue-100 rounded-lg p-5">
+                <h3 class="font-bold text-blue-800 mb-3">Nairobi</h3>
+                <p class="text-sm text-gray-600 mb-3">Tech hub with 70% of Kenya's tech companies</p>
+                <span class="badge-sm bg-blue-100 text-blue-800">Technology, Finance</span>
+            </div>
+            <div class="border border-green-100 rounded-lg p-5">
+                <h3 class="font-bold text-green-800 mb-3">Mombasa</h3>
+                <p class="text-sm text-gray-600 mb-3">Logistics, tourism, and port-related industries</p>
+                <span class="badge-sm bg-green-100 text-green-800">Tourism, Logistics</span>
+            </div>
+            <div class="border border-yellow-100 rounded-lg p-5">
+                <h3 class="font-bold text-yellow-800 mb-3">Kisumu</h3>
+                <p class="text-sm text-gray-600 mb-3">Agricultural processing and lakeside economy</p>
+                <span class="badge-sm bg-yellow-100 text-yellow-800">Agriculture, Fishing</span>
+            </div>
+            <div class="border border-purple-100 rounded-lg p-5">
+                <h3 class="font-bold text-purple-800 mb-3">Nakuru</h3>
+                <p class="text-sm text-gray-600 mb-3">Agricultural center and manufacturing growth</p>
+                <span class="badge-sm bg-purple-100 text-purple-800">Agriculture, Manufacturing</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="bg-gradient-to-r from-blue-800 to-indigo-900 rounded-2xl p-8 text-center text-white">
+        <h2 class="text-2xl font-bold mb-4">Ready to Start Your Career Journey?</h2>
+        <p class="mb-6 max-w-2xl mx-auto">Take our personality assessment and get personalized career recommendations based on your strengths and Kenya's job market.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{% url 'assessments:assessments-start' %}" 
+               class="bg-white text-blue-800 hover:bg-gray-100 font-bold py-3 px-8 rounded-lg transition duration-300 btn-primary">
+                Take Assessment
+            </a>
+            <a href="{% url 'recommendations:public_career_list' %}" 
+               class="bg-transparent border-2 border-white hover:bg-white hover:text-blue-800 text-white font-bold py-3 px-8 rounded-lg transition duration-300">
+                Explore Careers
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

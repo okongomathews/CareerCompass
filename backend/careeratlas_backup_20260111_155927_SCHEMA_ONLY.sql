@@ -1,0 +1,10 @@
+-- CareerCompass Kenya — Database Schema Backup
+-- This file is the SCHEMA backup from the development database.
+-- The career data tables are empty — run the management commands
+-- after migrating to populate data:
+--   python manage.py migrate
+--   python manage.py load_mbti_data
+--   python manage.py populate_careers
+--   python manage.py populate_career_subjects
+--   python manage.py populate_learning_styles
+--   python manage.py populate_resources

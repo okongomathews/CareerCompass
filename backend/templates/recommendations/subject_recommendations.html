@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Subject Recommendations for Campus{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Subject Recommendations for Your Campus Journey</h1>
+    {% if chosen_career %}
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+            <p class="font-semibold">Based on your interest in <strong>{{ chosen_career.name }}</strong>, we recommend these subjects:</p>
+            <ul class="list-disc pl-5 mt-2">
+                {% for cs in career_specific %}
+                <li><strong>{{ cs.subject.name }}</strong> ({{ cs.get_importance_display }}) – weight: {{ cs.weight }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">General Subject Recommendations</h2>
+        <div class="flex flex-wrap gap-3">
+            {% for subj_name in recommended_subjects %}
+            <span class="badge-md bg-green-100 text-green-800">{{ subj_name }}</span>
+            {% endfor %}
+        </div>
+        <p class="mt-4 text-gray-600">These subjects align with your personality and career aspirations. Focus on them when selecting your campus courses.</p>
+    </div>
+</div>
+{% endblock %}

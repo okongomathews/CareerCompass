@@ -1,0 +1,434 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Coaching Plan – CareerCompass Kenya{% endblock %}
+{% block page_title %}My Coaching Plan{% endblock %}
+
+{% block content %}
+
+{# ── No assessment yet ─────────────────────────────────────────────────────── #}
+{% if not has_assessment %}
+<div class="max-w-lg mx-auto text-center mt-8">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
+    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-brain text-blue-500 text-2xl"></i>
+    </div>
+    <h2 class="text-xl font-bold text-gray-800 mb-2">Take the Personality Assessment First</h2>
+    <p class="text-gray-500 text-sm mb-6">
+      Your coaching plan is built from your MBTI personality type and career matches.
+      Complete the assessment to unlock your personalised plan.
+    </p>
+    <a href="{% url 'assessments:assessments-start' %}"
+       class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition">
+      <i class="fas fa-brain"></i> Take Assessment
+    </a>
+  </div>
+</div>
+
+{# ── Has assessment but no plan yet ───────────────────────────────────────── #}
+{% elif not coaching_plan %}
+<div class="max-w-xl mx-auto mt-8">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center mb-6">
+    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-map-marked-alt text-indigo-500 text-2xl"></i>
+    </div>
+    <h2 class="text-xl font-bold text-gray-800 mb-2">Create Your Coaching Plan</h2>
+    <p class="text-gray-500 text-sm mb-2">
+      You completed the assessment as <span class="font-bold text-indigo-600">{{ assessment_result.personality_type.mbti_type }}</span>
+      — {{ assessment_result.personality_type.name }}.
+    </p>
+    <p class="text-gray-500 text-sm mb-6">Set your career goals below and the AI coach will build a personalised plan around them.</p>
+  </div>
+
+  {# Goal-setting form to create the plan #}
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <h3 class="font-bold text-gray-800 mb-5 flex items-center gap-2">
+      <i class="fas fa-bullseye text-blue-500"></i> Set Your Career Goals
+    </h3>
+
+    <div id="goal-form" class="space-y-5">
+      <!-- Short-term -->
+      <div>
+        <label class="block text-sm font-semibold text-green-700 mb-1">
+          <i class="fas fa-seedling mr-1"></i> Short-Term Goals <span class="font-normal text-gray-400">(next 0–3 months)</span>
+        </label>
+        <div id="short-term-goals" class="space-y-2">
+          <div class="flex gap-2">
+            <input type="text" placeholder="e.g. Research universities offering Computer Science"
+                   class="goal-input-short flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-300">
+            <button onclick="addGoalRow('short-term-goals','goal-input-short')"
+                    class="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 text-sm font-bold">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medium-term -->
+      <div>
+        <label class="block text-sm font-semibold text-blue-700 mb-1">
+          <i class="fas fa-flag mr-1"></i> Medium-Term Goals <span class="font-normal text-gray-400">(3–12 months)</span>
+        </label>
+        <div id="medium-term-goals" class="space-y-2">
+          <div class="flex gap-2">
+            <input type="text" placeholder="e.g. Apply to 5 universities with strong CS programmes"
+                   class="goal-input-medium flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+            <button onclick="addGoalRow('medium-term-goals','goal-input-medium')"
+                    class="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm font-bold">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Long-term -->
+      <div>
+        <label class="block text-sm font-semibold text-purple-700 mb-1">
+          <i class="fas fa-mountain mr-1"></i> Long-Term Goals <span class="font-normal text-gray-400">(1–5 years)</span>
+        </label>
+        <div id="long-term-goals" class="space-y-2">
+          <div class="flex gap-2">
+            <input type="text" placeholder="e.g. Graduate with a first class degree in Software Engineering"
+                   class="goal-input-long flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+            <button onclick="addGoalRow('long-term-goals','goal-input-long')"
+                    class="px-3 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 text-sm font-bold">+</button>
+          </div>
+        </div>
+      </div>
+
+      <button id="generate-btn" onclick="generatePlan()"
+              class="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-indigo-600
+                     text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition mt-2">
+        <i class="fas fa-wand-magic-sparkles"></i>
+        <span id="generate-btn-text">Generate My Coaching Plan</span>
+      </button>
+    </div>
+
+    <div id="generate-error" class="hidden mt-3 p-3 bg-red-50 text-red-700 rounded-lg text-sm"></div>
+  </div>
+</div>
+
+{# ── Has a coaching plan ───────────────────────────────────────────────────── #}
+{% else %}
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+  <!-- ── Main column ────────────────────────────────────────────────────── -->
+  <div class="xl:col-span-2 space-y-5">
+
+    <!-- Profile banner -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white animate-fade-in-up">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <div class="text-blue-200 text-xs font-semibold uppercase tracking-wide mb-1">Personality Type</div>
+          {% if coaching_plan.personality_type %}
+          <div class="text-4xl font-black">{{ coaching_plan.personality_type.mbti_type }}</div>
+          <div class="text-blue-200">{{ coaching_plan.personality_type.name }}</div>
+          {% else %}
+          <div class="text-xl text-blue-300">Not determined</div>
+          {% endif %}
+        </div>
+        <div>
+          <div class="text-blue-200 text-xs font-semibold uppercase tracking-wide mb-1">Learning Style</div>
+          {% if coaching_plan.learning_style %}
+          <div class="text-2xl font-bold">{{ coaching_plan.learning_style.name|title }}</div>
+          <div class="text-blue-200 text-sm">{{ coaching_plan.learning_style.description|truncatewords:12 }}</div>
+          {% else %}
+          <div class="text-xl text-blue-300">Not determined</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="mt-5">
+        <div class="flex justify-between text-sm mb-1.5">
+          <span class="text-blue-200">Plan Progress</span>
+          <span class="font-bold">{{ coaching_plan.completion_percentage|floatformat:0 }}%</span>
+        </div>
+        <div class="h-2.5 bg-blue-500 bg-opacity-40 rounded-full overflow-hidden">
+          <div class="h-full bg-white rounded-full transition-all duration-700"
+               style="width:{{ coaching_plan.completion_percentage|floatformat:0 }}%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goals sections (read + inline edit) -->
+    {% for goal_type, goals, color, icon, timeframe, field_name in goal_sections %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-bold text-gray-800 flex items-center gap-2">
+          <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:{{ color }}20">
+            <i class="{{ icon }}" style="color:{{ color }}"></i>
+          </span>
+          {{ goal_type }} Goals
+          <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full ml-1">{{ timeframe }}</span>
+        </h2>
+        <button onclick="toggleEditGoals('{{ field_name }}')"
+                class="text-xs text-blue-600 hover:underline flex items-center gap-1">
+          <i class="fas fa-pencil text-xs"></i> Edit
+        </button>
+      </div>
+
+      <!-- View mode -->
+      <div id="view-{{ field_name }}">
+        {% if goals %}
+        <ul class="space-y-2">
+          {% for goal in goals %}
+          <li class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl text-sm">
+            <i class="fas fa-circle-dot mt-0.5 flex-shrink-0" style="color:{{ color }}"></i>
+            <span class="text-gray-700">{{ goal }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-gray-400 italic">No {{ goal_type|lower }} goals set yet.
+          <button onclick="toggleEditGoals('{{ field_name }}')" class="text-blue-500 hover:underline">Add one →</button>
+        </p>
+        {% endif %}
+      </div>
+
+      <!-- Edit mode (hidden by default) -->
+      <div id="edit-{{ field_name }}" class="hidden">
+        <div id="inputs-{{ field_name }}" class="space-y-2 mb-3">
+          {% for goal in goals %}
+          <div class="flex gap-2">
+            <input type="text" value="{{ goal }}"
+                   class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                   style="--tw-ring-color:{{ color }}"
+                   data-field="{{ field_name }}">
+            <button onclick="removeGoalRow(this)" class="px-2 text-red-400 hover:text-red-600 text-lg leading-none">&times;</button>
+          </div>
+          {% empty %}
+          <div class="flex gap-2">
+            <input type="text" placeholder="Enter a goal…"
+                   class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                   data-field="{{ field_name }}">
+            <button onclick="removeGoalRow(this)" class="px-2 text-red-400 hover:text-red-600 text-lg leading-none">&times;</button>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="addEditRow('{{ field_name }}')"
+                  class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
+            <i class="fas fa-plus text-xs"></i> Add goal
+          </button>
+          <button onclick="saveGoals('{{ field_name }}')"
+                  class="ml-auto px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
+            Save
+          </button>
+          <button onclick="toggleEditGoals('{{ field_name }}')"
+                  class="px-4 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Action items -->
+    {% if coaching_plan.action_items %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up">
+      <h2 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <span class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+          <i class="fas fa-list-check text-amber-500"></i>
+        </span>
+        Action Items
+      </h2>
+      <div class="space-y-2">
+        {% for item in coaching_plan.action_items %}
+        <div class="flex items-start gap-3 p-3 border border-gray-100 rounded-xl text-sm hover:bg-gray-50 transition">
+          <div class="w-5 h-5 border-2 border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
+          <span class="text-gray-700">{{ item }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <div class="space-y-5">
+
+    {% if coaching_plan.key_strengths %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up">
+      <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+        <i class="fas fa-bolt text-yellow-500"></i> Key Strengths
+      </h3>
+      <div class="flex flex-wrap gap-2">
+        {% for s in coaching_plan.key_strengths %}
+        <span class="text-xs px-2.5 py-1 bg-yellow-50 text-yellow-700 border border-yellow-100 rounded-full">{{ s }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if coaching_plan.identified_challenges %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up">
+      <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+        <i class="fas fa-triangle-exclamation text-orange-500"></i> Challenges to Work On
+      </h3>
+      <div class="space-y-1.5">
+        {% for c in coaching_plan.identified_challenges %}
+        <div class="flex items-start gap-2 text-sm text-gray-600">
+          <i class="fas fa-arrow-right text-orange-400 mt-0.5 text-xs flex-shrink-0"></i>{{ c }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Regenerate plan -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up">
+      <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+        <i class="fas fa-rotate text-blue-500"></i> Update Plan
+      </h3>
+      <p class="text-xs text-gray-500 mb-3">Regenerate your coaching plan based on your current goals and latest career matches.</p>
+      <button onclick="regeneratePlan()"
+              class="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-50 text-blue-700 rounded-xl
+                     text-sm font-semibold hover:bg-blue-100 transition">
+        <i class="fas fa-wand-magic-sparkles"></i>
+        <span id="regen-btn-text">Regenerate Plan</span>
+      </button>
+      <div id="regen-msg" class="hidden mt-2 text-xs text-center text-gray-500"></div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up">
+      <h3 class="font-bold text-gray-800 mb-3">Quick Actions</h3>
+      <div class="space-y-2">
+        <a href="{% url 'ai_coach:chat' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition text-sm font-medium text-gray-700">
+          <i class="fas fa-robot text-blue-500 w-4"></i> Chat with AI Coach
+        </a>
+        <a href="{% url 'recommendations:my_recommendations' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-sm font-medium text-gray-700">
+          <i class="fas fa-briefcase text-green-500 w-4"></i> View Career Matches
+        </a>
+        <a href="{% url 'ai_coach:learning_resources' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition text-sm font-medium text-gray-700">
+          <i class="fas fa-book-open text-purple-500 w-4"></i> Learning Resources
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
+
+/* ── Goal-setting form helpers (no-plan state) ─────────────────────────── */
+function addGoalRow(containerId, inputClass) {
+  const container = document.getElementById(containerId);
+  const last = container.lastElementChild;
+  const clone = last.cloneNode(true);
+  clone.querySelector('input').value = '';
+  container.appendChild(clone);
+  clone.querySelector('input').focus();
+}
+
+async function generatePlan() {
+  const btn = document.getElementById('generate-btn');
+  const btnText = document.getElementById('generate-btn-text');
+  const errDiv = document.getElementById('generate-error');
+
+  const short  = [...document.querySelectorAll('.goal-input-short')].map(i => i.value.trim()).filter(Boolean);
+  const medium = [...document.querySelectorAll('.goal-input-medium')].map(i => i.value.trim()).filter(Boolean);
+  const long_  = [...document.querySelectorAll('.goal-input-long')].map(i => i.value.trim()).filter(Boolean);
+
+  if (!short.length && !medium.length && !long_.length) {
+    errDiv.textContent = 'Please add at least one goal before generating your plan.';
+    errDiv.classList.remove('hidden');
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.textContent = 'Generating…';
+  errDiv.classList.add('hidden');
+
+  try {
+    const res = await fetch('{% url "ai_coach:update_goals" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+      body: JSON.stringify({short_term: short, medium_term: medium, long_term: long_, generate: true}),
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location.reload();
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch (e) {
+    errDiv.textContent = 'Error generating plan: ' + e.message;
+    errDiv.classList.remove('hidden');
+    btn.disabled = false;
+    btnText.textContent = 'Generate My Coaching Plan';
+  }
+}
+
+/* ── Inline goal editing (has-plan state) ─────────────────────────────── */
+function toggleEditGoals(fieldName) {
+  document.getElementById('view-' + fieldName).classList.toggle('hidden');
+  document.getElementById('edit-' + fieldName).classList.toggle('hidden');
+}
+
+function addEditRow(fieldName) {
+  const container = document.getElementById('inputs-' + fieldName);
+  const div = document.createElement('div');
+  div.className = 'flex gap-2';
+  div.innerHTML = `<input type="text" placeholder="Enter a goal…"
+      class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+      data-field="${fieldName}">
+    <button onclick="removeGoalRow(this)" class="px-2 text-red-400 hover:text-red-600 text-lg leading-none">&times;</button>`;
+  container.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function removeGoalRow(btn) {
+  const row = btn.closest('.flex');
+  const container = row.parentElement;
+  if (container.children.length > 1) row.remove();
+  else row.querySelector('input').value = '';
+}
+
+async function saveGoals(fieldName) {
+  const inputs = document.querySelectorAll(`[data-field="${fieldName}"]`);
+  const goals  = [...inputs].map(i => i.value.trim()).filter(Boolean);
+
+  const payload = {};
+  payload[fieldName] = goals;
+
+  try {
+    const res = await fetch('{% url "ai_coach:update_goals" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.success) window.location.reload();
+    else alert('Error saving: ' + (data.error || 'unknown'));
+  } catch (e) {
+    alert('Network error: ' + e.message);
+  }
+}
+
+async function regeneratePlan() {
+  const btn = document.getElementById('regen-btn-text');
+  const msg = document.getElementById('regen-msg');
+  btn.textContent = 'Regenerating…';
+  msg.classList.add('hidden');
+  try {
+    const res = await fetch('{% url "ai_coach:update_goals" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+      body: JSON.stringify({generate: true}),
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location.reload();
+    } else {
+      throw new Error(data.error || 'unknown');
+    }
+  } catch(e) {
+    msg.textContent = 'Error: ' + e.message;
+    msg.classList.remove('hidden');
+    btn.textContent = 'Regenerate Plan';
+  }
+}
+</script>
+{% endblock %}

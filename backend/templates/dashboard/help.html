@@ -1,0 +1,907 @@
+{% extends 'base.html' %}
+{% block title %}Help & FAQs – CareerCompass Kenya{% endblock %}
+{% block page_title %}Help &amp; FAQs{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Accordion */
+  .faq-item { border-bottom: 1px solid #e2e8f0; }
+  .faq-item:last-child { border-bottom: none; }
+
+  .faq-trigger {
+    width: 100%; text-align: left; padding: 1.1rem 0;
+    background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; font-size: .9375rem; font-weight: 600; color: #1e293b;
+    transition: color .2s;
+  }
+  .faq-trigger:hover { color: #3b82f6; }
+
+  .faq-trigger .faq-icon {
+    flex-shrink: 0; width: 1.25rem; height: 1.25rem;
+    border-radius: 50%; background: #eff6ff; color: #3b82f6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .6rem; transition: transform .25s, background .2s;
+  }
+  .faq-trigger[aria-expanded="true"] .faq-icon {
+    transform: rotate(45deg); background: #3b82f6; color: #fff;
+  }
+
+  .faq-body {
+    overflow: hidden; max-height: 0;
+    transition: max-height .3s ease, padding .3s ease;
+  }
+  .faq-body.open { max-height: 600px; }
+  .faq-body-inner { padding-bottom: 1.1rem; }
+  .faq-body-inner p { color: #475569; font-size: .875rem; line-height: 1.7; }
+  .faq-body-inner ul { list-style: disc; padding-left: 1.25rem; margin-top: .5rem; }
+  .faq-body-inner li { color: #475569; font-size: .875rem; line-height: 1.7; margin-bottom: .25rem; }
+  .faq-body-inner a { color: #3b82f6; font-weight: 600; text-decoration: none; }
+  .faq-body-inner a:hover { text-decoration: underline; }
+
+  /* Category filter pills */
+  .cat-pill {
+    padding: .4rem 1rem; border-radius: 9999px; font-size: .8125rem; font-weight: 600;
+    border: 2px solid transparent; cursor: pointer; transition: all .2s;
+    background: #f1f5f9; color: #64748b;
+  }
+  .cat-pill:hover { background: #e2e8f0; color: #1e293b; }
+  .cat-pill.active {
+    background: #3b82f6; color: #fff; border-color: #3b82f6;
+  }
+
+  /* Contact card */
+  .contact-card {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem;
+    padding: 1.5rem; transition: box-shadow .2s, transform .2s;
+  }
+  .contact-card:hover { box-shadow: 0 4px 16px rgba(59,130,246,.12); transform: translateY(-2px); }
+
+  /* Search highlight */
+  mark { background: #fef08a; color: #1e293b; border-radius: 2px; padding: 0 2px; }
+
+  /* Step badges */
+  .step-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.75rem; height: 1.75rem; border-radius: 50%;
+    background: #3b82f6; color: #fff; font-size: .75rem; font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* Sticky TOC on large screens */
+  @media (min-width: 1024px) {
+    .toc-sticky { position: sticky; top: 5rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% load static %}
+
+<!-- ── Page header ───────────────────────────────────────────────────────── -->
+<div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-7 mb-7 text-white animate-fade-in-up">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-black mb-1">Help Centre &amp; FAQs</h1>
+      <p class="text-blue-200 text-sm max-w-xl">
+        Everything you need to know about CareerCompass Kenya — from taking your first assessment
+        to landing your dream career.
+      </p>
+    </div>
+    <!-- Search -->
+    <div class="flex-shrink-0 w-full md:w-80">
+      <div class="relative">
+        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-300 text-sm"></i>
+        <input id="faqSearch" type="search" placeholder="Search questions…"
+               class="w-full pl-10 pr-4 py-3 bg-white bg-opacity-15 border border-white border-opacity-30
+                      rounded-xl text-white placeholder-blue-300 text-sm focus:outline-none
+                      focus:bg-opacity-25 focus:border-opacity-60 transition">
+      </div>
+      <p id="searchCount" class="text-blue-300 text-xs mt-2 hidden"></p>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-7">
+
+  <!-- ── TOC / Quick-nav sidebar ────────────────────────────────────────── -->
+  <aside class="lg:col-span-1">
+    <div class="toc-sticky space-y-4">
+
+      <!-- Category filter -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Browse by topic</h2>
+        <div class="flex flex-wrap gap-2" id="catFilters">
+          <button class="cat-pill active" data-cat="all">All</button>
+          <button class="cat-pill" data-cat="getting-started">Getting Started</button>
+          <button class="cat-pill" data-cat="assessment">Assessment</button>
+          <button class="cat-pill" data-cat="careers">Careers</button>
+          <button class="cat-pill" data-cat="ai-coach">AI Coach</button>
+          <button class="cat-pill" data-cat="account">Account</button>
+          <button class="cat-pill" data-cat="privacy">Privacy</button>
+        </div>
+      </div>
+
+      <!-- Jump links -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Sections</h2>
+        <nav class="space-y-1 text-sm">
+          <a href="#sec-getting-started"
+             class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition">
+            <i class="fas fa-rocket w-4 text-blue-400"></i> Getting Started
+          </a>
+          <a href="#sec-assessment"
+             class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 hover:bg-purple-50 hover:text-purple-700 transition">
+            <i class="fas fa-brain w-4 text-purple-400"></i> Personality Assessment
+          </a>
+          <a href="#sec-careers"
+             class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 hover:bg-green-50 hover:text-green-700 transition">
+            <i class="fas fa-briefcase w-4 text-green-400"></i> Career Recommendations
+          </a>
+          <a href="#sec-ai-coach"
+             class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <i class="fas fa-robot w-4 text-indigo-400"></i> AI Career Coach
+          </a>
+          <a href="#sec-account"
+             class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 hover:bg-orange-50 hover:text-orange-700 transition">
+            <i class="fas fa-user-circle w-4 text-orange-400"></i> Account &amp; Profile
+          </a>
+          <a href="#sec-privacy"
+             class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-700 transition">
+            <i class="fas fa-shield-halved w-4 text-red-400"></i> Privacy &amp; Data
+          </a>
+          <a href="#sec-contact"
+             class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 hover:bg-teal-50 hover:text-teal-700 transition">
+            <i class="fas fa-headset w-4 text-teal-400"></i> Contact &amp; Support
+          </a>
+        </nav>
+      </div>
+
+      <!-- Quick Start -->
+      <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-4 text-white">
+        <div class="font-bold text-sm mb-2 flex items-center gap-2">
+          <i class="fas fa-bolt"></i> Quick Start
+        </div>
+        <ol class="space-y-2">
+          {% for step, label, icon in quick_steps %}
+          <li class="flex items-center gap-2 text-xs text-blue-100">
+            <span class="step-badge flex-shrink-0">{{ step }}</span>{{ label }}
+          </li>
+          {% empty %}
+          <li class="flex items-center gap-2 text-xs text-blue-100">
+            <span class="step-badge">1</span> Create an account
+          </li>
+          <li class="flex items-center gap-2 text-xs text-blue-100">
+            <span class="step-badge">2</span> Complete your profile
+          </li>
+          <li class="flex items-center gap-2 text-xs text-blue-100">
+            <span class="step-badge">3</span> Take the Personality Test
+          </li>
+          <li class="flex items-center gap-2 text-xs text-blue-100">
+            <span class="step-badge">4</span> Explore career matches
+          </li>
+          <li class="flex items-center gap-2 text-xs text-blue-100">
+            <span class="step-badge">5</span> Chat with the AI Coach
+          </li>
+          {% endfor %}
+        </ol>
+        <a href="{% url 'assessments:assessments-start' %}"
+           class="mt-4 block text-center text-xs font-bold bg-white text-blue-600 rounded-xl py-2 hover:bg-blue-50 transition">
+          <i class="fas fa-play-circle mr-1"></i> Start Assessment
+        </a>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ── FAQ content ────────────────────────────────────────────────────── -->
+  <main class="lg:col-span-3 space-y-7" id="faqMain">
+
+    <!-- No results message (hidden by default) -->
+    <div id="noResults" class="hidden text-center py-16 animate-fade-in-up">
+      <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-search text-gray-300 text-2xl"></i>
+      </div>
+      <p class="text-gray-500 font-semibold">No questions match your search.</p>
+      <p class="text-gray-400 text-sm mt-1">Try a different keyword or browse a topic above.</p>
+    </div>
+
+    <!-- ── SECTION: Getting Started ────────────────────────────────────── -->
+    <section id="sec-getting-started" data-section="getting-started">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-rocket text-blue-600"></i>
+        </div>
+        <h2 class="text-lg font-black text-gray-800">Getting Started</h2>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 divide-y divide-gray-100" data-section-name="getting-started">
+
+        <div class="faq-item" data-cat="getting-started" data-keywords="what is careercompass about platform">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>What is CareerCompass Kenya?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>CareerCompass Kenya is an AI-powered career guidance platform built specifically for Kenyan students and young professionals. It combines the internationally validated <strong>MBTI (Myers–Briggs Type Indicator)</strong> personality framework with Kenya-specific labour-market data to match you with the careers most likely to bring you fulfilment <em>and</em> financial stability.</p>
+              <p class="mt-2">Key features include:</p>
+              <ul>
+                <li>A 60-question MBTI psychometric assessment across four cognitive dimensions</li>
+                <li>Personalised career recommendations ranked by personality fit, academic background, and market demand</li>
+                <li>An AI Career Coach powered by large-language-model technology</li>
+                <li>Learning-path guides and subject recommendations for each career</li>
+                <li>Live salary and market-trend data for the Kenyan job market</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="getting-started" data-keywords="register sign up account create new">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>How do I create an account?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Registration takes less than two minutes:</p>
+              <ul>
+                <li>Click <strong>Register</strong> on the login page or go to <code>/users/register/</code></li>
+                <li>Enter your first name, last name, username, email address, and a secure password</li>
+                <li>Select your <strong>account type</strong> — Student, Teacher, or Parent/Guardian</li>
+                <li>Submit the form. You will be logged in automatically and a welcome email will be sent to the address you provided</li>
+              </ul>
+              <p class="mt-2">If you already have an account, go to <a href="{% url 'login' %}">Sign In</a>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="getting-started" data-keywords="who is platform for student teacher parent">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Who is CareerCompass Kenya designed for?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>The platform supports three user types:</p>
+              <ul>
+                <li><strong>Students</strong> — the primary users. Take the personality assessment, receive career matches, and chat with the AI coach to plan your future.</li>
+                <li><strong>Teachers / Guidance Counsellors</strong> — monitor student progress and support career conversations in the classroom.</li>
+                <li><strong>Parents / Guardians</strong> — stay informed about career options and provide contextual support to their children.</li>
+              </ul>
+              <p class="mt-2">Administrators have a separate analytics dashboard for school-wide or system-wide reporting.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="getting-started" data-keywords="free cost price pay subscription">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Is CareerCompass Kenya free to use?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Yes. All core features — the MBTI assessment, career recommendations, AI coach, learning paths, and market-trend explorer — are completely free for registered users. There are no hidden fees or premium tiers at this time.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="getting-started" data-keywords="browser device mobile phone works support">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Which browsers and devices are supported?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>CareerCompass Kenya works on any modern browser — Chrome, Firefox, Edge, and Safari. The interface is fully responsive and works well on smartphones, tablets, and desktops. For the best experience we recommend Chrome or Edge on a screen wider than 360 px.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION: Personality Assessment ────────────────────────────── -->
+    <section id="sec-assessment" data-section="assessment">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-brain text-purple-600"></i>
+        </div>
+        <h2 class="text-lg font-black text-gray-800">Personality Assessment</h2>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 divide-y divide-gray-100">
+
+        <div class="faq-item" data-cat="assessment" data-keywords="mbti test what is personality type assessment">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>What is the MBTI personality assessment?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>MBTI stands for <strong>Myers–Briggs Type Indicator</strong> — a widely used psychometric framework that describes how people perceive the world and make decisions. It measures four cognitive dimensions:</p>
+              <ul>
+                <li><strong>E/I — Extraversion vs Introversion:</strong> where you direct your energy (outward or inward)</li>
+                <li><strong>S/N — Sensing vs Intuition:</strong> how you gather information (concrete facts vs patterns and possibilities)</li>
+                <li><strong>T/F — Thinking vs Feeling:</strong> how you make decisions (logic vs values)</li>
+                <li><strong>J/P — Judging vs Perceiving:</strong> how you approach the external world (structured vs flexible)</li>
+              </ul>
+              <p class="mt-2">The combination of your preferences in each dimension produces one of <strong>16 personality types</strong> (e.g. INTJ, ENFP, ISTJ). CareerCompass uses your type — and the precise percentage scores on each dimension — to match you with careers that align with your natural cognitive style.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="assessment" data-keywords="how long questions time assessment take minutes">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>How long does the assessment take?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>The assessment contains <strong>60 questions</strong> (15 per dimension). Most users complete it in <strong>15–20 minutes</strong>. Your progress is saved automatically after every answer, so you can pause mid-way and resume from where you left off — even if you close your browser.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="assessment" data-keywords="accurate honest answers right wrong">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Are there right or wrong answers? How do I get accurate results?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>There are <strong>no right or wrong answers</strong>. All 16 personality types are equally valid and each maps to rewarding career paths. For the most accurate results:</p>
+              <ul>
+                <li>Answer based on your <em>natural tendencies</em>, not what you think is expected of you</li>
+                <li>Go with your first instinct — prolonged deliberation tends to reduce accuracy</li>
+                <li>Think about how you behave <em>most of the time</em> across different life contexts, not just school</li>
+                <li>Avoid answering based on a specific role you currently play (e.g. "class prefect mode")</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="assessment" data-keywords="retake redo restart assessment again new">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Can I retake the assessment? Will it overwrite my previous results?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Yes, you can retake the assessment at any time by clicking the <strong>Retake</strong> button on your Results page or by navigating to <a href="{% url 'assessments:assessments-start' %}">Personality Test</a> in the sidebar.</p>
+              <p class="mt-2"><strong>Important:</strong> starting a new session will permanently replace your previous results and regenerate your career recommendations. If you are happy with your current results, view them first at <a href="{% url 'assessments:assessments-results' %}">Assessment Results</a> before retaking.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="assessment" data-keywords="confidence percentage score mean dimensions">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>What does the confidence percentage and dimension score mean?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Each dimension (e.g. E/I) shows you a bar split between your two poles — e.g. <em>60% Extraversion / 40% Introversion</em>. A score closer to 100% on one side means your preference is very clear; a score near 50/50 means you are borderline between the two, which is entirely normal and simply means you are flexible in that dimension.</p>
+              <p class="mt-2">The overall <strong>confidence percentage</strong> is a composite measure of how consistently you answered across all four dimensions. A higher value means your type prediction is more reliable. Values above 70% are considered strong.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="assessment" data-keywords="saved progress resume pause continue incomplete">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>What happens if I close my browser mid-assessment?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Your progress is automatically saved after every answer you submit. If you close your browser or lose your internet connection, simply return to <a href="{% url 'assessments:assessments-start' %}">Personality Test</a>. The system will detect your incomplete session and resume from where you left off.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION: Career Recommendations ───────────────────────────── -->
+    <section id="sec-careers" data-section="careers">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-briefcase text-green-600"></i>
+        </div>
+        <h2 class="text-lg font-black text-gray-800">Career Recommendations</h2>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 divide-y divide-gray-100">
+
+        <div class="faq-item" data-cat="careers" data-keywords="how generated recommendations career match calculated">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>How are my career recommendations generated?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Each recommendation is computed from a weighted blend of four scores, plus a small additive grade-level adjustment:</p>
+              <ul>
+                <li><strong>Personality match (55%)</strong> — how closely your MBTI type and dimension percentages align with the cognitive demands of each career; this is the primary driver of your score</li>
+                <li><strong>Academic alignment (30%)</strong> — how well your declared subjects and learning style map to the knowledge base required</li>
+                <li><strong>Learning style (10%)</strong> — how your preferred way of learning fits the career's typical training path</li>
+                <li><strong>Interest alignment (5%)</strong> — overlap between your stated interests and the career's field</li>
+              </ul>
+              <p class="mt-2">Market demand and salary potential are shown on every career page for context, but are deliberately <strong>not</strong> factored into your personal match score — this keeps your results reflecting who you are rather than just which careers happen to be in demand right now.</p>
+              <p class="mt-2">Careers scoring <strong>70% or above overall</strong> are classified as High Match; 50–69% as Good Match; below 50% as Explore.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="careers" data-keywords="regenerate refresh update recommendations new">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Can I regenerate or refresh my career recommendations?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Yes. On the <a href="{% url 'recommendations:my_recommendations' %}">My Careers</a> page there is a <strong>Regenerate Recommendations</strong> button. You may want to do this after:</p>
+              <ul>
+                <li>Updating your academic subjects or learning style in your profile</li>
+                <li>Retaking the personality assessment</li>
+                <li>Significant time has passed and market conditions may have shifted</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="careers" data-keywords="explore all careers browse list search filter">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Can I browse careers beyond my personal recommendations?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Yes. Use <a href="{% url 'recommendations:career_list' %}">Explore Careers</a> in the sidebar to browse the complete career catalogue. You can filter by category, education level, and salary range, and search by name. Each career page shows a detailed profile including required subjects, personality compatibility, salary data, and a learning path.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="careers" data-keywords="compare two careers side by side difference">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>How do I compare two careers side-by-side?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Open any career's detail page and click the <strong>Compare</strong> button, then choose a second career. The comparison view renders both careers side-by-side across personality fit, salary, education requirements, market growth, and required skills — making it easy to weigh trade-offs.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="careers" data-keywords="learning path subjects how to achieve career university">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>What is a Learning Path and how do I use it?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Every career detail page includes a <strong>Learning Path</strong> — a step-by-step roadmap that shows you exactly which secondary school subjects to prioritise, which university courses or diplomas are most relevant, and which certifications, internships, and skills to build at each stage of your career journey. Click <em>View Learning Path</em> on any career detail page to access it.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="careers" data-keywords="market trends salary jobs demand kenya">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Where does the salary and market-demand data come from?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Salary ranges are sourced from the <strong>Kenya National Bureau of Statistics (KNBS)</strong> earnings surveys and supplemented with data from major Kenyan job boards. Market-demand scores are computed from job-posting trends, government sector-growth projections, and World Bank Kenya economic reports. Data is reviewed and updated periodically. You can explore market trends for any career on the <a href="{% url 'recommendations:market_trends' %}">Market Trends</a> page.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION: AI Coach ───────────────────────────────────────────── -->
+    <section id="sec-ai-coach" data-section="ai-coach">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-robot text-indigo-600"></i>
+        </div>
+        <h2 class="text-lg font-black text-gray-800">AI Career Coach</h2>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 divide-y divide-gray-100">
+
+        <div class="faq-item" data-cat="ai-coach" data-keywords="ai coach what does do robot chat">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>What can the AI Career Coach help me with?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>The AI Career Coach is a conversational assistant trained on career guidance principles and Kenya-specific career data. It can help you:</p>
+              <ul>
+                <li>Understand what a specific career involves day-to-day</li>
+                <li>Explore your strengths and how they relate to career options</li>
+                <li>Draft a personalised career development plan</li>
+                <li>Identify skill gaps and suggest resources to close them</li>
+                <li>Prepare for university applications or job interviews</li>
+                <li>Think through difficult decisions (e.g. Science vs Arts pathway)</li>
+                <li>Get motivation and accountability support</li>
+              </ul>
+              <p class="mt-2">Access it via <a href="{% url 'ai_coach:chat' %}">AI Coach Chat</a> in the sidebar.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="ai-coach" data-keywords="conversation history saved past messages delete">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Are my coaching conversations saved?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Yes. Every conversation is stored securely in your account under <a href="{% url 'ai_coach:conversation_list' %}">Conversations</a>. You can return to any previous session to review advice, continue the discussion, or start a new topic in a fresh conversation. Conversations are private and visible only to you.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="ai-coach" data-keywords="coaching plan what how create structured">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>What is a Coaching Plan?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>A <strong>Coaching Plan</strong> is an AI-generated, structured roadmap created specifically for your personality type, target career, and academic situation. It breaks down your journey into timed phases with concrete actions, milestones, and resources. Visit <a href="{% url 'ai_coach:coaching_plan' %}">Coaching Plan</a> to generate or review yours.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="ai-coach" data-keywords="ai wrong incorrect bad advice mistake">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>What if the AI gives me incorrect or unhelpful advice?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>The AI coach is a decision-support tool, not a substitute for qualified human counselling. While it draws on validated career data, it can occasionally make errors or produce generic responses. We recommend:</p>
+              <ul>
+                <li>Cross-checking important information with your school's guidance counsellor or a careers professional</li>
+                <li>Asking follow-up questions to get more specific guidance</li>
+                <li>Verifying salary, university entry requirements, and labour market claims from official Kenyan sources (KNBS, KUCCPS, etc.)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="ai-coach" data-keywords="learning resources books videos materials where find">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Where can I find learning resources?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>The <a href="{% url 'ai_coach:learning_resources' %}">Learning Resources</a> section (in the AI Coach menu) curates books, online courses, videos, and links relevant to your personality type and target careers. Resources are organised by career category and skill level. You can also ask the AI coach directly to recommend resources for any specific topic.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION: Account & Profile ────────────────────────────────── -->
+    <section id="sec-account" data-section="account">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-user-circle text-orange-500"></i>
+        </div>
+        <h2 class="text-lg font-black text-gray-800">Account &amp; Profile</h2>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 divide-y divide-gray-100">
+
+        <div class="faq-item" data-cat="account" data-keywords="update profile change edit information name">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>How do I update my profile information?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Go to <a href="{% url 'profile' %}">My Profile</a> from the sidebar or the top-right user menu. From there click <strong>Edit Profile</strong> to update your name, school, year of study, subjects, and learning-style preference. Keeping your profile up to date improves the accuracy of your career recommendations.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="account" data-keywords="password reset forgot change lost can't login">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>I forgot my password. How do I reset it?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>On the login page click <strong>Forgot Password?</strong>. You can reset via two methods:</p>
+              <ul>
+                <li><strong>OTP (recommended for Kenyan users):</strong> enter your email address, receive a one-time code, verify it, and set a new password — all within a few minutes and works perfectly on slow mobile connections</li>
+                <li><strong>Email link:</strong> a password-reset link is sent to your registered email address. Click the link within 24 hours to set a new password</li>
+              </ul>
+              <p class="mt-2">If you no longer have access to your registered email address, contact support (see below).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="account" data-keywords="profile completion percentage how improve">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>How is my Profile Completion percentage calculated?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Profile completion tracks the following fields — each contributes to the overall percentage:</p>
+              <ul>
+                <li>First and last name</li>
+                <li>School or institution</li>
+                <li>Year / form of study</li>
+                <li>Academic subjects (at least three)</li>
+                <li>Learning style preference</li>
+                <li>Personality assessment completed</li>
+              </ul>
+              <p class="mt-2">A higher completion percentage gives the recommendation engine more data points and produces more accurate, personalised career matches.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="account" data-keywords="delete account remove data close">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Can I delete my account?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Yes. To request account deletion, email <strong>support@careercompass.ke</strong> with the subject line "Account Deletion Request" from your registered email address. Your account and all associated data will be permanently deleted within 7 business days in accordance with our data retention policy.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION: Privacy & Data ────────────────────────────────────── -->
+    <section id="sec-privacy" data-section="privacy">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-shield-halved text-red-500"></i>
+        </div>
+        <h2 class="text-lg font-black text-gray-800">Privacy &amp; Data</h2>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 divide-y divide-gray-100">
+
+        <div class="faq-item" data-cat="privacy" data-keywords="data secure stored safe how privacy">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>How is my personal data stored and secured?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>All personal data is stored on servers located within the East Africa region. We apply the following security measures:</p>
+              <ul>
+                <li>Passwords are hashed using Django's PBKDF2-SHA256 algorithm — we never store plain-text passwords</li>
+                <li>All data in transit is encrypted via HTTPS / TLS 1.3</li>
+                <li>Database access is restricted by role-based permissions</li>
+                <li>Regular automated backups with point-in-time recovery</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="privacy" data-keywords="share sell data third party ads">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Is my data shared with third parties or used for advertising?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p><strong>No.</strong> CareerCompass Kenya does not sell, share, or rent your personal data to any third party. Your assessment results, conversations, and profile information are used exclusively to power your personalised career guidance experience within the platform. Aggregated, anonymised statistics may be used for academic research purposes at Egerton University.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="privacy" data-keywords="ai conversation data training model used">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Are my AI coaching conversations used to train AI models?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Your conversations are stored privately in your account and are not used to train any AI model. Conversations are accessible only to you and to authorised platform administrators in exceptional circumstances (e.g. investigation of a reported safety concern).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item" data-cat="privacy" data-keywords="admin teacher see my results data access">
+          <button class="faq-trigger" aria-expanded="false" onclick="toggleFAQ(this)">
+            <span>Can my teacher or school administrator see my assessment results?</span>
+            <span class="faq-icon"><i class="fas fa-plus text-xs"></i></span>
+          </button>
+          <div class="faq-body">
+            <div class="faq-body-inner">
+              <p>Platform administrators with the <strong>Admin</strong> role can access aggregated, school-level analytics (e.g. how many students have completed the assessment, overall distribution of personality types). Individual student results are only visible in the PDF career report, which an admin can generate for a specific student — this is intended for use by school guidance counsellors in student support meetings.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION: Contact & Support ────────────────────────────────── -->
+    <section id="sec-contact">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 bg-teal-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-headset text-teal-600"></i>
+        </div>
+        <h2 class="text-lg font-black text-gray-800">Contact &amp; Support</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+        <!-- Email -->
+        <div class="contact-card text-center">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-envelope text-blue-600 text-xl"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 mb-1">Email Support</h3>
+          <p class="text-gray-500 text-xs mb-3">We respond within 24 hours on weekdays</p>
+          <a href="mailto:support@careercompass.ke"
+             class="text-blue-600 font-semibold text-sm hover:underline">
+            support@careercompass.ke
+          </a>
+        </div>
+
+        <!-- AI Coach -->
+        <div class="contact-card text-center">
+          <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-robot text-indigo-600 text-xl"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 mb-1">Ask the AI Coach</h3>
+          <p class="text-gray-500 text-xs mb-3">Get instant answers to career questions, 24 / 7</p>
+          <a href="{% url 'ai_coach:chat' %}"
+             class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition">
+            <i class="fas fa-comment-dots text-xs"></i> Open Chat
+          </a>
+        </div>
+
+        <!-- Institution -->
+        <div class="contact-card text-center">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-university text-green-600 text-xl"></i>
+          </div>
+          <h3 class="font-bold text-gray-800 mb-1">Academic Project</h3>
+          <p class="text-gray-500 text-xs mb-3">Egerton University — Department of Computer Science</p>
+          <span class="text-gray-500 text-xs">COMP 493 · Samuel Mathews · S13/07776/22</span>
+        </div>
+      </div>
+
+      <!-- Still stuck callout -->
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5 flex flex-col sm:flex-row items-center gap-4">
+        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-circle-question text-blue-600 text-xl"></i>
+        </div>
+        <div class="flex-1 text-center sm:text-left">
+          <p class="font-bold text-gray-800">Didn't find your answer?</p>
+          <p class="text-gray-500 text-sm">Try searching above, ask the AI Coach directly, or email us and we'll get back to you.</p>
+        </div>
+        <div class="flex gap-3 flex-shrink-0">
+          <a href="{% url 'ai_coach:chat' %}"
+             class="px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition">
+            <i class="fas fa-robot mr-1.5"></i> Ask AI Coach
+          </a>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ── Accordion ────────────────────────────────────────────────────────────── */
+function toggleFAQ(btn) {
+  const body   = btn.nextElementSibling;
+  const isOpen = btn.getAttribute('aria-expanded') === 'true';
+
+  // Close all open items in the same section
+  const section = btn.closest('[data-section-name]') || btn.closest('.bg-white');
+  if (section) {
+    section.querySelectorAll('.faq-trigger[aria-expanded="true"]').forEach(t => {
+      if (t !== btn) {
+        t.setAttribute('aria-expanded', 'false');
+        t.nextElementSibling.classList.remove('open');
+      }
+    });
+  }
+
+  btn.setAttribute('aria-expanded', String(!isOpen));
+  body.classList.toggle('open', !isOpen);
+}
+
+/* ── Category filter ────────────────────────────────────────────────────── */
+document.getElementById('catFilters').addEventListener('click', function(e) {
+  const pill = e.target.closest('.cat-pill');
+  if (!pill) return;
+
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+
+  const cat = pill.dataset.cat;
+  document.querySelectorAll('section[data-section]').forEach(sec => {
+    const sectionCat = sec.dataset.section;
+    const match = cat === 'all' || sectionCat === cat;
+    sec.style.display = match ? '' : 'none';
+  });
+
+  // Reset search when changing category
+  document.getElementById('faqSearch').value = '';
+  document.querySelectorAll('.faq-item').forEach(item => item.style.display = '');
+  document.getElementById('noResults').classList.add('hidden');
+  document.getElementById('searchCount').classList.add('hidden');
+});
+
+/* ── Live search ─────────────────────────────────────────────────────────── */
+document.getElementById('faqSearch').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+
+  // Reset category filter to 'all'
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  document.querySelector('.cat-pill[data-cat="all"]').classList.add('active');
+  document.querySelectorAll('section[data-section]').forEach(sec => sec.style.display = '');
+
+  if (!q) {
+    document.querySelectorAll('.faq-item').forEach(item => item.style.display = '');
+    document.getElementById('noResults').classList.add('hidden');
+    document.getElementById('searchCount').classList.add('hidden');
+    // Remove any highlights
+    document.querySelectorAll('.faq-trigger span:first-child, .faq-body-inner').forEach(el => {
+      el.innerHTML = el.innerHTML.replace(/<mark>/g, '').replace(/<\/mark>/g, '');
+    });
+    return;
+  }
+
+  let visible = 0;
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const keywords = (item.dataset.keywords || '').toLowerCase();
+    const questionEl = item.querySelector('.faq-trigger span:first-child');
+    const question   = questionEl ? questionEl.textContent.toLowerCase() : '';
+    const bodyEl     = item.querySelector('.faq-body-inner');
+    const body       = bodyEl ? bodyEl.textContent.toLowerCase() : '';
+
+    const matches = question.includes(q) || keywords.includes(q) || body.includes(q);
+    item.style.display = matches ? '' : 'none';
+    if (matches) {
+      visible++;
+      // Auto-open matched items
+      const btn = item.querySelector('.faq-trigger');
+      btn.setAttribute('aria-expanded', 'true');
+      item.querySelector('.faq-body').classList.add('open');
+    }
+  });
+
+  const countEl = document.getElementById('searchCount');
+  countEl.textContent = visible + ' result' + (visible !== 1 ? 's' : '') + ' for "' + this.value.trim() + '"';
+  countEl.classList.toggle('hidden', false);
+
+  document.getElementById('noResults').classList.toggle('hidden', visible > 0);
+});
+
+/* ── Smooth scroll for TOC links ─────────────────────────────────────────── */
+document.querySelectorAll('a[href^="#sec-"]').forEach(a => {
+  a.addEventListener('click', function(e) {
+    e.preventDefault();
+    const target = document.getElementById(this.getAttribute('href').slice(1));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+{% endblock %}

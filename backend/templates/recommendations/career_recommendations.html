@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% block title %}My Career Matches – CareerCompass Kenya{% endblock %}
+{% block page_title %}My Career Recommendations{% endblock %}
+
+{% block content %}
+{% load static assessment_extras %}
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="stat-card animate-fade-in-up">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">High Match</span>
+      <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+        <i class="fas fa-star text-green-500 text-sm"></i>
+      </div>
+    </div>
+    <div class="text-3xl font-black text-green-600">{{ high_compatibility|length }}</div>
+    <div class="text-xs text-gray-500 mt-1">Careers ≥ 70% compatible</div>
+  </div>
+  <div class="stat-card animate-fade-in-up" style="animation-delay:.05s">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Good Match</span>
+      <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+        <i class="fas fa-thumbs-up text-blue-500 text-sm"></i>
+      </div>
+    </div>
+    <div class="text-3xl font-black text-blue-600">{{ medium_compatibility|length }}</div>
+    <div class="text-xs text-gray-500 mt-1">Careers 50–69% compatible</div>
+  </div>
+  <div class="stat-card animate-fade-in-up" style="animation-delay:.1s">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Explore</span>
+      <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+        <i class="fas fa-compass text-purple-500 text-sm"></i>
+      </div>
+    </div>
+    <div class="text-3xl font-black text-purple-600">{{ low_compatibility|length }}</div>
+    <div class="text-xs text-gray-500 mt-1">Other options to consider</div>
+  </div>
+</div>
+
+{% if personality_type %}
+<div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-5 mb-6 text-white animate-fade-in-up" style="animation-delay:.15s">
+  <div class="flex items-center gap-4">
+    <div class="w-14 h-14 bg-white bg-opacity-20 rounded-xl flex items-center justify-center font-black text-xl flex-shrink-0">
+      {{ personality_type.mbti_type }}
+    </div>
+    <div>
+      <div class="font-bold text-lg">{{ personality_type.name }} — {{ personality_type.mbti_type }}</div>
+      <div class="text-indigo-200 text-sm">
+        Results ranked by personality fit. Use the filters below to explore by market demand or salary.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Strengths & Weaknesses for personality type -->
+{% if personality_type.strengths or personality_type.weaknesses %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6 animate-fade-in-up" style="animation-delay:.18s">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center">
+        <i class="fas fa-star text-green-500 text-xs"></i>
+      </span>
+      Your Core Strengths
+    </h3>
+    <ul class="space-y-2">
+      {% for strength in personality_type.strengths|split:", " %}
+      <li class="flex items-start gap-2 text-sm text-gray-700">
+        <i class="fas fa-check text-green-500 mt-0.5 flex-shrink-0 text-xs"></i>
+        {{ strength }}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center">
+        <i class="fas fa-seedling text-amber-500 text-xs"></i>
+      </span>
+      Areas to Develop
+    </h3>
+    <ul class="space-y-2">
+      {% for weakness in personality_type.weaknesses|split:", " %}
+      <li class="flex items-start gap-2 text-sm text-gray-700">
+        <i class="fas fa-arrow-up text-amber-500 mt-0.5 flex-shrink-0 text-xs"></i>
+        {{ weakness }}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- ── Filter & Sort Bar ─────────────────────────────────────────────────── -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6 animate-fade-in-up flex flex-wrap items-center gap-3">
+  <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide mr-1">
+    <i class="fas fa-sliders mr-1"></i> Filter &amp; Sort
+  </span>
+
+  <!-- Sort mode -->
+  <div class="flex items-center gap-1 border border-gray-200 rounded-xl overflow-hidden text-sm">
+    <a href="?sort=personality{% if demand_filter %}&demand={{ demand_filter }}{% endif %}"
+       class="px-3 py-1.5 {% if sort_mode == 'personality' %}bg-indigo-600 text-white{% else %}hover:bg-gray-50 text-gray-600{% endif %} transition">
+      <i class="fas fa-brain mr-1"></i> By Personality Fit
+    </a>
+    <a href="?sort=demand{% if demand_filter %}&demand={{ demand_filter }}{% endif %}"
+       class="px-3 py-1.5 {% if sort_mode == 'demand' %}bg-amber-500 text-white{% else %}hover:bg-gray-50 text-gray-600{% endif %} transition">
+      <i class="fas fa-chart-line mr-1"></i> By Market Demand
+    </a>
+    <a href="?sort=salary{% if demand_filter %}&demand={{ demand_filter }}{% endif %}"
+       class="px-3 py-1.5 {% if sort_mode == 'salary' %}bg-green-600 text-white{% else %}hover:bg-gray-50 text-gray-600{% endif %} transition">
+      <i class="fas fa-money-bill-wave mr-1"></i> By Salary
+    </a>
+  </div>
+
+  <!-- Demand filter -->
+  <div class="flex items-center gap-1 border border-gray-200 rounded-xl overflow-hidden text-sm">
+    <a href="?sort={{ sort_mode }}"
+       class="px-3 py-1.5 {% if not demand_filter %}bg-gray-700 text-white{% else %}hover:bg-gray-50 text-gray-600{% endif %} transition">All</a>
+    {% for value, label in demand_choices %}
+    <a href="?sort={{ sort_mode }}&demand={{ value }}"
+       class="px-3 py-1.5 {% if demand_filter == value %}
+         {% if value == 'very_high' %}bg-red-600 text-white{% elif value == 'high' %}bg-orange-500 text-white
+         {% elif value == 'medium' %}bg-blue-500 text-white{% else %}bg-gray-400 text-white{% endif %}
+       {% else %}hover:bg-gray-50 text-gray-600{% endif %} transition">
+      {{ label }}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if demand_filter or sort_mode != 'personality' %}
+  <a href="?" class="ml-auto text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
+    <i class="fas fa-xmark"></i> Clear filters
+  </a>
+  {% endif %}
+</div>
+
+
+{% if high_compatibility %}
+<div class="mb-8 animate-fade-in-up" style="animation-delay:.2s">
+  <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+    <i class="fas fa-trophy text-amber-500"></i>
+    Top Matches <span class="badge-sm bg-green-100 text-green-700 ml-2">≥70% Compatible</span>
+  </h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    {% for rec in high_compatibility %}
+    {% widthratio rec.overall_score 1 100 as pct %}
+    {% widthratio rec.personality_match_score 1 100 as p_pct %}
+    {% widthratio rec.academic_match_score 1 100 as a_pct %}
+    {% widthratio rec.market_demand_score 1 100 as m_pct %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover">
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <h3 class="font-bold text-gray-800">{{ rec.career.name }}</h3>
+          <span class="text-xs text-gray-500">{{ rec.career.category|title }}</span>
+        </div>
+        <div class="text-right">
+          <div class="text-2xl font-black text-green-600">{{ pct }}%</div>
+          <div class="text-xs text-gray-400">overall</div>
+        </div>
+      </div>
+
+      <!-- Overall bar -->
+      <div class="compat-bar-wrap mb-4" style="height:10px">
+        <div class="compat-bar-fill compat-bar-overall" style="width:{{ pct }}%"></div>
+      </div>
+
+      <p class="text-xs text-gray-500 mb-4">{{ rec.career.description|truncatewords:20 }}</p>
+
+      <!-- P A M breakdown -->
+      <div class="space-y-2 mb-4">
+        <div class="flex items-center gap-2 text-xs">
+          <span class="w-16 text-purple-600 font-bold">P Personality</span>
+          <div class="flex-1 compat-bar-wrap" style="height:6px">
+            <div class="compat-bar-fill compat-bar-personality" style="width:{{ p_pct }}%"></div>
+          </div>
+          <span class="w-10 text-right font-semibold text-gray-700">{{ p_pct }}%</span>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="w-16 text-blue-600 font-bold">A Academic</span>
+          <div class="flex-1 compat-bar-wrap" style="height:6px">
+            <div class="compat-bar-fill compat-bar-academic" style="width:{{ a_pct }}%"></div>
+          </div>
+          <span class="w-10 text-right font-semibold text-gray-700">{{ a_pct }}%</span>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="w-16 text-green-600 font-bold">M Market</span>
+          <div class="flex-1 compat-bar-wrap" style="height:6px">
+            <div class="compat-bar-fill compat-bar-market" style="width:{{ m_pct }}%"></div>
+          </div>
+          <span class="w-10 text-right font-semibold text-gray-700">{{ m_pct }}%</span>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <span class="badge-sm {% if rec.career.kenyan_market_demand == 'very_high' %}bg-red-100 text-red-700{% elif rec.career.kenyan_market_demand == 'high' %}bg-orange-100 text-orange-700{% elif rec.career.kenyan_market_demand == 'medium' %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+          {{ rec.career.get_kenyan_market_demand_display }}
+        </span>
+        <div class="flex gap-3">
+          <a href="{% url 'recommendations:career_detail' rec.career.id %}" class="text-blue-600 text-xs font-semibold hover:underline">
+            View Details →
+          </a>
+          <a href="{% url 'ai_coach:chat' %}" class="text-green-600 text-xs font-semibold hover:underline">
+            Ask AI Coach
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Medium Compatibility ───────────────────────────────────────────────── -->
+{% if medium_compatibility %}
+<div class="mb-8 animate-fade-in-up" style="animation-delay:.25s">
+  <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+    <i class="fas fa-thumbs-up text-blue-500"></i>
+    Good Matches <span class="badge-sm bg-blue-100 text-blue-700 ml-2">50–69%</span>
+  </h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for rec in medium_compatibility %}
+    {% widthratio rec.overall_score 1 100 as pct %}
+    {% widthratio rec.personality_match_score 1 100 as p_pct %}
+    {% widthratio rec.academic_match_score 1 100 as a_pct %}
+    {% widthratio rec.market_demand_score 1 100 as m_pct %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 card-hover">
+      <div class="flex justify-between items-start mb-2">
+        <div class="font-semibold text-gray-800 text-sm">{{ rec.career.name }}</div>
+        <span class="badge-sm bg-blue-100 text-blue-700">{{ pct }}%</span>
+      </div>
+      <p class="text-xs text-gray-500 mb-3">{{ rec.career.description|truncatewords:12 }}</p>
+      <div class="space-y-1.5">
+
+        <div class="flex items-center gap-1.5 text-xs">
+          <span class="w-3 font-bold text-purple-600">P</span>
+          <div class="flex-1 h-1 bg-gray-100 rounded-full"><div class="h-full bg-purple-400 rounded-full" style="width:{{ p_pct }}%"></div></div>
+          <span class="text-gray-400 w-7 text-right">{{ p_pct }}%</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs">
+          <span class="w-3 font-bold text-blue-600">A</span>
+          <div class="flex-1 h-1 bg-gray-100 rounded-full"><div class="h-full bg-blue-400 rounded-full" style="width:{{ a_pct }}%"></div></div>
+          <span class="text-gray-400 w-7 text-right">{{ a_pct }}%</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs">
+          <span class="w-3 font-bold text-green-600">M</span>
+          <div class="flex-1 h-1 bg-gray-100 rounded-full"><div class="h-full bg-green-400 rounded-full" style="width:{{ m_pct }}%"></div></div>
+          <span class="text-gray-400 w-7 text-right">{{ m_pct }}%</span>
+        </div>
+      </div>
+      <div class="mt-3 text-right">
+        <a href="{% url 'recommendations:career_detail' rec.career.id %}" class="text-blue-600 text-xs font-medium hover:underline">Details →</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ── All Recommendations Table ─────────────────────────────────────────── -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style="animation-delay:.3s">
+  <h2 class="text-lg font-bold text-gray-800 mb-4">Full Comparison Table</h2>
+  <div class="overflow-x-auto custom-scrollbar">
+    <table class="min-w-full text-sm">
+      <thead>
+        <tr class="bg-gray-50 text-left">
+          <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Career</th>
+          <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Overall</th>
+          <th class="px-4 py-3 text-xs font-semibold text-purple-600 uppercase tracking-wide">P</th>
+          <th class="px-4 py-3 text-xs font-semibold text-blue-600 uppercase tracking-wide">A</th>
+          <th class="px-4 py-3 text-xs font-semibold text-green-600 uppercase tracking-wide">M</th>
+          <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Market</th>
+          <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for rec in all_recommendations %}
+        {% widthratio rec.overall_score 1 100 as pct %}
+        {% widthratio rec.personality_match_score 1 100 as p_pct %}
+        {% widthratio rec.academic_match_score 1 100 as a_pct %}
+        {% widthratio rec.market_demand_score 1 100 as m_pct %}
+        <tr class="hover:bg-gray-50 transition">
+          <td class="px-4 py-3">
+            <div class="font-semibold text-gray-800">{{ rec.career.name }}</div>
+            <div class="text-xs text-gray-400">{{ rec.career.category|title }}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <div class="w-14 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full rounded-full {% if pct >= 70 %}bg-green-500{% elif pct >= 50 %}bg-blue-500{% else %}bg-gray-400{% endif %}"
+                     style="width:{{ pct }}%"></div>
+              </div>
+              <span class="font-bold {% if pct >= 70 %}text-green-600{% elif pct >= 50 %}text-blue-600{% else %}text-gray-500{% endif %}">{{ pct }}%</span>
+            </div>
+          </td>
+          <td class="px-4 py-3 text-purple-700 font-semibold">{{ p_pct }}%</td>
+          <td class="px-4 py-3 text-blue-700 font-semibold">{{ a_pct }}%</td>
+          <td class="px-4 py-3 text-green-700 font-semibold">{{ m_pct }}%</td>
+          <td class="px-4 py-3">
+            <span class="badge-sm {% if rec.career.kenyan_market_demand == 'very_high' %}bg-red-100 text-red-700{% elif rec.career.kenyan_market_demand == 'high' %}bg-orange-100 text-orange-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+              {{ rec.career.get_kenyan_market_demand_display }}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <a href="{% url 'recommendations:career_detail' rec.career.id %}" class="text-blue-600 hover:underline text-xs font-medium">View →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Bottom Actions -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 animate-fade-in-up" style="animation-delay:.35s">
+  <a href="{% url 'assessments:assessments-results' %}"
+     class="flex items-center justify-center gap-2 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-purple-200 hover:shadow transition font-semibold text-gray-700 text-sm">
+    <i class="fas fa-chart-pie text-purple-500"></i> View Assessment Results
+  </a>
+  <a href="{% url 'ai_coach:coaching_plan' %}"
+     class="flex items-center justify-center gap-2 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-green-200 hover:shadow transition font-semibold text-gray-700 text-sm">
+    <i class="fas fa-map-marked-alt text-green-500"></i> Coaching Plan
+  </a>
+  <a href="{% url 'recommendations:career_list' %}"
+     class="flex items-center justify-center gap-2 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-blue-200 hover:shadow transition font-semibold text-gray-700 text-sm">
+    <i class="fas fa-compass text-blue-500"></i> Explore All Careers
+  </a>
+</div>
+{% endblock %}

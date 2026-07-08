@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Learning Resources – CareerCompass Kenya{% endblock %}
+{% block page_title %}Learning Resources{% endblock %}
+
+{% block content %}
+{% if not coaching_plan %}
+<div class="max-w-lg mx-auto mt-8 text-center">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
+    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-book-open text-purple-500 text-2xl"></i>
+    </div>
+    <h2 class="text-xl font-bold text-gray-800 mb-2">Resources Not Yet Available</h2>
+    <p class="text-gray-500 text-sm mb-6">Complete your personality assessment to unlock personalised learning resources.</p>
+    <a href="{% url 'assessments:assessments-start' %}"
+       class="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition">
+      <i class="fas fa-brain"></i> Take Assessment First
+    </a>
+  </div>
+</div>
+{% else %}
+
+<!-- Resource Type Tabs -->
+<div class="flex flex-wrap gap-2 mb-6">
+  {% for rtype, label, icon, color in resource_types %}
+  <button onclick="filterResources('{{ rtype }}')" data-type="{{ rtype }}"
+          class="resource-tab flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition
+                 {% if forloop.first %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600{% endif %}">
+    <i class="{{ icon }}"></i> {{ label }}
+  </button>
+  {% empty %}
+  <button onclick="filterResources('all')" class="resource-tab flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white border border-blue-600">
+    <i class="fas fa-th-large"></i> All Resources
+  </button>
+  <button onclick="filterResources('article')" class="resource-tab flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-white text-gray-600 border border-gray-200 hover:border-blue-300">
+    <i class="fas fa-newspaper"></i> Articles
+  </button>
+  <button onclick="filterResources('course')" class="resource-tab flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-white text-gray-600 border border-gray-200 hover:border-blue-300">
+    <i class="fas fa-laptop"></i> Courses
+  </button>
+  <button onclick="filterResources('book')" class="resource-tab flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-white text-gray-600 border border-gray-200 hover:border-blue-300">
+    <i class="fas fa-book"></i> Books
+  </button>
+  <button onclick="filterResources('tool')" class="resource-tab flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-white text-gray-600 border border-gray-200 hover:border-blue-300">
+    <i class="fas fa-tools"></i> Tools
+  </button>
+  <button onclick="filterResources('scholarship')" class="resource-tab flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-white text-gray-600 border border-gray-200 hover:border-blue-300">
+    <i class="fas fa-award"></i> Scholarships
+  </button>
+  {% endfor %}
+</div>
+
+<!-- Resources Grid -->
+{% if resources %}
+<div id="resourcesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+  {% for resource in resources %}
+  <div class="resource-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover"
+       data-type="{{ resource.resource_type }}">
+    <div class="flex items-start justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0
+          {% if resource.resource_type == 'article' %}bg-blue-100
+          {% elif resource.resource_type == 'course' %}bg-green-100
+          {% elif resource.resource_type == 'book' %}bg-purple-100
+          {% elif resource.resource_type == 'tool' %}bg-orange-100
+          {% else %}bg-amber-100{% endif %}">
+          <i class="fas
+            {% if resource.resource_type == 'article' %}fa-newspaper text-blue-600
+            {% elif resource.resource_type == 'course' %}fa-laptop text-green-600
+            {% elif resource.resource_type == 'book' %}fa-book text-purple-600
+            {% elif resource.resource_type == 'tool' %}fa-tools text-orange-600
+            {% else %}fa-award text-amber-600{% endif %}
+            text-sm"></i>
+        </div>
+        <span class="badge-sm bg-gray-100 text-gray-600 capitalize">{{ resource.resource_type }}</span>
+      </div>
+      {% if resource.is_kenyan_specific %}
+      <span class="badge-sm bg-green-100 text-green-700">
+        <i class="fas fa-map-marker-alt mr-1"></i>Kenya
+      </span>
+      {% endif %}
+    </div>
+
+    <h3 class="font-bold text-gray-800 text-sm mb-2 leading-snug">{{ resource.title }}</h3>
+    <p class="text-gray-500 text-xs leading-relaxed mb-4">{{ resource.description|truncatewords:20 }}</p>
+
+    <div class="flex items-center justify-between">
+      <div class="text-xs text-gray-400">
+        {% if resource.duration %}<i class="fas fa-clock mr-1"></i>{{ resource.duration }}{% endif %}
+        {% if resource.cost_in_kes %}
+        <span class="ml-2">
+          {% if resource.cost_in_kes == 0 %}
+          <span class="text-green-600 font-semibold">Free</span>
+          {% else %}
+          KES {{ resource.cost_in_kes|floatformat:0 }}
+          {% endif %}
+        </span>
+        {% endif %}
+      </div>
+      {% if resource.url %}
+      <a href="{{ resource.url }}" target="_blank" rel="noopener"
+         class="text-blue-600 hover:text-blue-800 text-xs font-semibold transition">
+        Access <i class="fas fa-external-link-alt ml-1 text-xs"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<!-- Default curated resources when none in DB -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+  {% for res in default_resources %}
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover resource-card" data-type="{{ res.2 }}">
+    <div class="flex items-start justify-between mb-3">
+      <span class="badge-sm bg-gray-100 text-gray-600 capitalize">{{ res.2 }}</span>
+      {% if res.5 %}<span class="badge-sm bg-green-100 text-green-700"><i class="fas fa-map-marker-alt mr-1"></i>Kenya</span>{% endif %}
+    </div>
+    <h3 class="font-bold text-gray-800 text-sm mb-2">{{ res.0 }}</h3>
+    <p class="text-gray-500 text-xs mb-4">{{ res.1 }}</p>
+    <a href="{{ res.3 }}" target="_blank" rel="noopener"
+       class="text-blue-600 hover:text-blue-800 text-xs font-semibold">
+      {{ res.4 }} <i class="fas fa-external-link-alt ml-1 text-xs"></i>
+    </a>
+  </div>
+  {% empty %}
+  <!-- Static fallback resources shown when default_resources list is empty -->
+  <div class="resource-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover" data-type="course">
+    <div class="flex items-start justify-between mb-3"><span class="badge-sm bg-gray-100 text-gray-600">Course</span></div>
+    <h3 class="font-bold text-gray-800 text-sm mb-2">Khan Academy</h3>
+    <p class="text-gray-500 text-xs mb-3">Free world-class education — Maths, Science, Computing for KCSE prep</p>
+    <a href="https://www.khanacademy.org" target="_blank" rel="noopener" class="text-blue-600 text-xs font-semibold">Visit Free <i class="fas fa-external-link-alt ml-1 text-xs"></i></a>
+  </div>
+  <div class="resource-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover" data-type="course">
+    <div class="flex items-start justify-between mb-3"><span class="badge-sm bg-gray-100 text-gray-600">Course</span></div>
+    <h3 class="font-bold text-gray-800 text-sm mb-2">freeCodeCamp</h3>
+    <p class="text-gray-500 text-xs mb-3">Learn web development, Python, and data science completely free</p>
+    <a href="https://www.freecodecamp.org" target="_blank" rel="noopener" class="text-blue-600 text-xs font-semibold">Start Learning <i class="fas fa-external-link-alt ml-1 text-xs"></i></a>
+  </div>
+  <div class="resource-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover" data-type="tool">
+    <div class="flex items-start justify-between mb-3">
+      <span class="badge-sm bg-gray-100 text-gray-600">Tool</span>
+      <span class="badge-sm bg-green-100 text-green-700"><i class="fas fa-map-marker-alt mr-1"></i>Kenya</span>
+    </div>
+    <h3 class="font-bold text-gray-800 text-sm mb-2">KUCCPS Portal</h3>
+    <p class="text-gray-500 text-xs mb-3">Official Kenya Universities and Colleges placement service</p>
+    <a href="https://kuccps.ac.ke" target="_blank" rel="noopener" class="text-blue-600 text-xs font-semibold">Visit KUCCPS <i class="fas fa-external-link-alt ml-1 text-xs"></i></a>
+  </div>
+  <div class="resource-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover" data-type="article">
+    <div class="flex items-start justify-between mb-3">
+      <span class="badge-sm bg-gray-100 text-gray-600">Article</span>
+      <span class="badge-sm bg-green-100 text-green-700"><i class="fas fa-map-marker-alt mr-1"></i>Kenya</span>
+    </div>
+    <h3 class="font-bold text-gray-800 text-sm mb-2">KNEC Past Papers</h3>
+    <p class="text-gray-500 text-xs mb-3">Official Kenya National Examinations Council KCSE past papers</p>
+    <a href="https://www.knec.ac.ke" target="_blank" rel="noopener" class="text-blue-600 text-xs font-semibold">Download <i class="fas fa-external-link-alt ml-1 text-xs"></i></a>
+  </div>
+  <div class="resource-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover" data-type="course">
+    <div class="flex items-start justify-between mb-3">
+      <span class="badge-sm bg-gray-100 text-gray-600">Course</span>
+      <span class="badge-sm bg-green-100 text-green-700"><i class="fas fa-map-marker-alt mr-1"></i>Kenya</span>
+    </div>
+    <h3 class="font-bold text-gray-800 text-sm mb-2">Ajira Digital</h3>
+    <p class="text-gray-500 text-xs mb-3">Government digital skills platform — free training for Kenyan youth</p>
+    <a href="https://ajiradigital.go.ke" target="_blank" rel="noopener" class="text-blue-600 text-xs font-semibold">Enrol Free <i class="fas fa-external-link-alt ml-1 text-xs"></i></a>
+  </div>
+  <div class="resource-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover" data-type="course">
+    <div class="flex items-start justify-between mb-3"><span class="badge-sm bg-gray-100 text-gray-600">Course</span></div>
+    <h3 class="font-bold text-gray-800 text-sm mb-2">Coursera</h3>
+    <p class="text-gray-500 text-xs mb-3">University-level courses from global institutions — many free to audit</p>
+    <a href="https://www.coursera.org" target="_blank" rel="noopener" class="text-blue-600 text-xs font-semibold">Browse Courses <i class="fas fa-external-link-alt ml-1 text-xs"></i></a>
+  </div>
+  <div class="resource-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover" data-type="course">
+    <div class="flex items-start justify-between mb-3"><span class="badge-sm bg-gray-100 text-gray-600">Course</span></div>
+    <h3 class="font-bold text-gray-800 text-sm mb-2">Google Career Certificates</h3>
+    <p class="text-gray-500 text-xs mb-3">Industry-recognised certifications in IT Support, Data, UX Design, and more</p>
+    <a href="https://grow.google/certificates" target="_blank" rel="noopener" class="text-blue-600 text-xs font-semibold">Apply Free <i class="fas fa-external-link-alt ml-1 text-xs"></i></a>
+  </div>
+  <div class="resource-card bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover" data-type="course">
+    <div class="flex items-start justify-between mb-3"><span class="badge-sm bg-gray-100 text-gray-600">Course</span></div>
+    <h3 class="font-bold text-gray-800 text-sm mb-2">LinkedIn Learning</h3>
+    <p class="text-gray-500 text-xs mb-3">Professional skills courses that integrate directly with your LinkedIn profile</p>
+    <a href="https://www.linkedin.com/learning" target="_blank" rel="noopener" class="text-blue-600 text-xs font-semibold">Try Free <i class="fas fa-external-link-alt ml-1 text-xs"></i></a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterResources(type) {
+  document.querySelectorAll('.resource-tab').forEach(btn => {
+    const active = btn.dataset.type === type || (type === 'all' && btn.dataset.type === 'all');
+    btn.classList.toggle('bg-blue-600', active);
+    btn.classList.toggle('text-white', active);
+    btn.classList.toggle('border-blue-600', active);
+    btn.classList.toggle('bg-white', !active);
+    btn.classList.toggle('text-gray-600', !active);
+    btn.classList.toggle('border-gray-200', !active);
+  });
+  document.querySelectorAll('.resource-card').forEach(card => {
+    const show = type === 'all' || card.dataset.type === type;
+    card.classList.toggle('hidden', !show);
+  });
+}
+</script>
+{% endblock %}

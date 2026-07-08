@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI Career Coach – CareerCompass Kenya{% endblock %}
+{% block page_title %}AI Career Coach{% endblock %}
+
+{% block extra_css %}
+<style>
+  #chatWindow {
+    height: calc(100vh - 340px);
+    min-height: 320px;
+    overflow-y: auto;
+  }
+  .msg-bubble { max-width: 78%; word-break: break-word; }
+  .msg-ai   { background:#f1f5f9; color:#1e293b; border-radius:0 1rem 1rem 1rem; }
+  .msg-user { background:#3b82f6; color:#fff;    border-radius:1rem 0 1rem 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-5 h-full">
+
+  <!-- ── Chat Panel (3/4) ───────────────────────────────────────────────── -->
+  <div class="lg:col-span-3 flex flex-col">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col flex-1 overflow-hidden">
+
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 text-white flex-shrink-0">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+              <i class="fas fa-robot text-white text-lg"></i>
+            </div>
+            <div>
+              <h1 class="font-bold text-lg">AI Career Coach</h1>
+              <p class="text-blue-200 text-xs">Personalised career guidance for Kenya</p>
+            </div>
+          </div>
+          <div class="text-right text-sm">
+            <div class="text-blue-200 text-xs">Session</div>
+            <div class="font-medium truncate max-w-[150px]">{{ conversation.title }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div id="chatWindow" class="p-5 custom-scrollbar flex-1">
+        {% for message in conversation.messages.all %}
+        <div class="flex {{ message.is_from_ai|yesno:'justify-start,justify-end' }} mb-4 chat-message">
+          {% if message.is_from_ai %}
+          <div class="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1">
+            <i class="fas fa-robot text-indigo-500 text-xs"></i>
+          </div>
+          {% endif %}
+          <div class="msg-bubble">
+            <div class="{{ message.is_from_ai|yesno:'msg-ai,msg-user' }} px-4 py-3 text-sm leading-relaxed">
+              {% if message.is_from_ai %}
+                {{ message.content|safe }}
+              {% else %}
+                {{ message.content|linebreaks }}
+              {% endif %}
+            </div>
+            <div class="text-xs text-gray-400 mt-1 {{ message.is_from_ai|yesno:'text-left,text-right' }} px-1">
+              {{ message.timestamp|date:"g:i A" }}
+            </div>
+          </div>
+          {% if not message.is_from_ai %}
+          <div class="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 ml-2 mt-1">
+            <span class="text-blue-600 font-bold text-xs">
+              {{ request.user.first_name|first|upper|default:"U" }}
+            </span>
+          </div>
+          {% endif %}
+        </div>
+        {% empty %}
+        <div class="flex flex-col items-center justify-center h-full text-center py-12">
+          <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mb-4">
+            <i class="fas fa-robot text-indigo-500 text-3xl"></i>
+          </div>
+          <h3 class="text-lg font-bold text-gray-700 mb-2">Hello, {{ request.user.first_name|default:request.user.username }}!</h3>
+          <p class="text-gray-500 text-sm max-w-sm">
+            I'm your AI Career Coach. Ask me anything about careers, subjects, university choices, or your future in Kenya!
+          </p>
+        </div>
+        {% endfor %}
+
+        <!-- Typing indicator -->
+        <div id="typingIndicator" class="hidden flex items-start gap-2 mb-4">
+          <div class="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-robot text-indigo-500 text-xs"></i>
+          </div>
+          <div class="msg-ai px-4 py-3">
+            <div class="typing-indicator flex space-x-1">
+              <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+              <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+              <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Prompts -->
+      <div class="px-5 pb-3 flex flex-wrap gap-2 flex-shrink-0">
+        {% for prompt in quick_prompts %}
+        <button onclick="sendQuick('{{ prompt|escapejs }}')"
+                class="px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-600
+                       rounded-lg text-xs font-medium transition border border-transparent
+                       hover:border-blue-200">
+          {{ prompt }}
+        </button>
+        {% empty %}
+        <button onclick="sendQuick('What careers suit my personality?')"
+                class="px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-600 rounded-lg text-xs font-medium transition">
+          What careers suit my personality?
+        </button>
+        <button onclick="sendQuick('What subjects should I study for engineering?')"
+                class="px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-600 rounded-lg text-xs font-medium transition">
+          Subjects for engineering?
+        </button>
+        <button onclick="sendQuick('How do I prepare for KUCCPS applications?')"
+                class="px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-600 rounded-lg text-xs font-medium transition">
+          KUCCPS applications
+        </button>
+        <button onclick="sendQuick('What are the highest paying careers in Kenya?')"
+                class="px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-600 rounded-lg text-xs font-medium transition">
+          Highest paying careers in Kenya
+        </button>
+        {% endfor %}
+      </div>
+
+      <!-- Input -->
+      <div class="border-t border-gray-100 p-4 flex-shrink-0">
+        <form id="chatForm" class="flex gap-3">
+          {% csrf_token %}
+          <input type="hidden" id="conversationId" value="{{ conversation.id }}">
+          <input type="text" id="messageInput" autocomplete="off"
+                 placeholder="Ask your career question…"
+                 class="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm
+                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+          <button type="submit" id="sendBtn"
+                  class="px-5 py-3 bg-blue-600 text-white rounded-xl font-semibold text-sm
+                         hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50">
+            <i class="fas fa-paper-plane"></i>
+            <span class="hidden sm:inline">Send</span>
+          </button>
+        </form>
+        <p class="text-xs text-gray-400 mt-1.5 ml-1">Press <kbd class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">Enter</kbd> to send</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Sidebar (1/4) ──────────────────────────────────────────────────── -->
+  <div class="space-y-5">
+
+    <!-- Profile snapshot -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <h3 class="font-bold text-gray-800 mb-4 text-sm">Your Profile</h3>
+      <div class="space-y-3">
+        <div>
+          <div class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Personality</div>
+          {% if request.user.studentprofile.assessmentresult %}
+          <div class="font-bold text-blue-600 text-lg">
+            {{ request.user.studentprofile.assessmentresult.personality_type.mbti_type }}
+          </div>
+          <div class="text-xs text-gray-500">
+            {{ request.user.studentprofile.assessmentresult.personality_type.name }}
+          </div>
+          {% else %}
+          <div class="text-sm text-gray-400 italic">Take the assessment first</div>
+          <a href="{% url 'assessments:assessments-start' %}"
+             class="text-xs text-blue-600 hover:underline">Take assessment →</a>
+          {% endif %}
+        </div>
+        <div>
+          <div class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Learning Style</div>
+          {% if coaching_plan and coaching_plan.learning_style %}
+          <div class="font-semibold text-green-600">{{ coaching_plan.learning_style.name|title }}</div>
+          {% else %}
+          <div class="text-sm text-gray-400 italic">Not determined yet</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-gray-50">
+        <a href="{% url 'ai_coach:coaching_plan' %}"
+           class="text-sm text-blue-600 hover:text-blue-800 font-medium transition">
+          View Coaching Plan →
+        </a>
+      </div>
+    </div>
+
+    <!-- Conversation history -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <h3 class="font-bold text-gray-800 mb-3 text-sm">Recent Chats</h3>
+      <div class="space-y-1.5">
+        {% for conv in conversations %}
+        <a href="{% url 'ai_coach:conversation_detail' conv.id %}"
+           class="flex items-center gap-2 p-2.5 rounded-xl hover:bg-gray-50 transition text-sm
+                  {% if conv.id == conversation.id %}bg-blue-50 border border-blue-100{% endif %}">
+          <i class="fas fa-comment-dots text-gray-300 text-xs flex-shrink-0"></i>
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-gray-700 truncate text-xs">{{ conv.title }}</div>
+            <div class="text-xs text-gray-400">{{ conv.updated_at|date:"d M" }}</div>
+          </div>
+        </a>
+        {% empty %}
+        <p class="text-xs text-gray-400 italic">No previous conversations</p>
+        {% endfor %}
+      </div>
+      {% if conversations %}
+      <div class="mt-3 pt-2 border-t border-gray-50">
+        <a href="{% url 'ai_coach:conversation_list' %}"
+           class="text-xs text-blue-600 hover:underline">All conversations →</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const convId = document.getElementById('conversationId').value;
+const chatWindow = document.getElementById('chatWindow');
+const form = document.getElementById('chatForm');
+const input = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const typing = document.getElementById('typingIndicator');
+
+function scrollBottom() {
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function appendMsg(content, isAI) {
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const wrap = document.createElement('div');
+  wrap.className = `flex ${isAI ? 'justify-start' : 'justify-end'} mb-4 chat-message`;
+
+  const avatar = isAI
+    ? `<div class="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1">
+         <i class="fas fa-robot text-indigo-500 text-xs"></i>
+       </div>`
+    : '';
+  const avatarRight = !isAI
+    ? `<div class="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 ml-2 mt-1">
+         <span class="text-blue-600 font-bold text-xs">{{ request.user.first_name|first|upper|default:"U" }}</span>
+       </div>`
+    : '';
+
+  const text = isAI
+    ? content.replace(/\n/g, '<br>')   // AI response already has HTML tags from _clean_ai_response
+    : content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');  // escape user input
+  wrap.innerHTML = `
+    ${avatar}
+    <div class="msg-bubble">
+      <div class="${isAI ? 'msg-ai' : 'msg-user'} px-4 py-3 text-sm leading-relaxed">${text}</div>
+      <div class="text-xs text-gray-400 mt-1 ${isAI ? 'text-left' : 'text-right'} px-1">${now}</div>
+    </div>
+    ${avatarRight}
+  `;
+  typing.before(wrap);
+  scrollBottom();
+}
+
+async function sendMsg(msg) {
+  if (!msg.trim()) return;
+  appendMsg(msg, false);
+  input.value = '';
+  sendBtn.disabled = true;
+  typing.classList.remove('hidden');
+  scrollBottom();
+
+  try {
+    const r = await fetch(`/ai-coach/api/send-message/${convId}/`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
+      body: JSON.stringify({message: msg}),
+    });
+    const d = await r.json();
+    typing.classList.add('hidden');
+    appendMsg(d.success ? d.response : 'Sorry, I encountered an error. Please try again.', true);
+  } catch {
+    typing.classList.add('hidden');
+    appendMsg('Network error. Please check your connection and try again.', true);
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+function sendQuick(text) { sendMsg(text); }
+
+form.addEventListener('submit', e => { e.preventDefault(); sendMsg(input.value); });
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(input.value); }
+});
+
+// Scroll to bottom on load
+scrollBottom();
+</script>
+{% endblock %}

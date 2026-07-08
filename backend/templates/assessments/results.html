@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load assessment_extras %}
+{% block title %}Your Results – CareerCompass Kenya{% endblock %}
+{% block page_title %}Assessment Results{% endblock %}
+
+{% block content %}
+{% load static %}
+
+<!-- Hero: Personality Type -->
+<div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 mb-6 text-white animate-fade-in-up" style="background:{{ result.personality_type.get_color }}">
+  <div class="flex flex-col md:flex-row md:items-center gap-6">
+    <div class="w-24 h-24 bg-white bg-opacity-15 rounded-2xl flex items-center justify-center flex-shrink-0">
+      <span class="text-4xl font-black text-white">{{ result.personality_type.mbti_type }}</span>
+    </div>
+    <div class="flex-1">
+      <div class="text-sm font-semibold opacity-75 mb-1 uppercase tracking-wider">
+        {{ result.personality_type.get_temperament_label }} &bull; {{ confidence_percent }}% confidence
+      </div>
+      <h1 class="text-3xl font-black mb-2">{{ result.personality_type.name }}</h1>
+      <p class="opacity-80 text-sm leading-relaxed max-w-2xl">{{ result.personality_type.description|truncatewords:50 }}</p>
+    </div>
+    <div class="flex gap-3 flex-shrink-0">
+      <a href="{% url 'assessments:assessments-start' %}"
+         class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-xl text-sm font-semibold transition">
+        <i class="fas fa-redo mr-1"></i> Retake
+      </a>
+      <a href="{% url 'recommendations:my_recommendations' %}"
+         class="px-4 py-2 bg-white text-gray-800 rounded-xl text-sm font-semibold hover:bg-gray-100 transition">
+        <i class="fas fa-briefcase mr-1"></i> My Careers
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+  <!-- LEFT: Dimension breakdowns + Strengths/Weaknesses -->
+  <div class="xl:col-span-2 space-y-6">
+
+    <!-- A/B Pole Percentages -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style="animation-delay:.05s">
+      <h2 class="text-lg font-bold text-gray-800 mb-5">Your Personality Dimensions</h2>
+      <div class="space-y-6">
+        {% for dim_code, dim in pole_percentages.items %}
+        <div class="dimension-card">
+          <!-- Labels row -->
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <div class="pole-letter pole-dominant text-xs" style="width:28px;height:28px">{{ dim.a_letter }}</div>
+              <span class="text-sm font-semibold text-gray-800">{{ dim.a_label }}</span>
+            </div>
+            <div class="text-center">
+              <span class="text-xs font-bold px-3 py-1 rounded-full
+                {% if dim.dominant == dim.a_letter %}bg-blue-100 text-blue-700{% else %}bg-purple-100 text-purple-700{% endif %}">
+                {{ dim.dominant }} &ndash; {{ dim.dominant_pct }}%
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-semibold text-gray-800">{{ dim.b_label }}</span>
+              <div class="pole-letter {% if dim.b_pct > 50 %}pole-dominant{% else %}pole-secondary{% endif %} text-xs" style="width:28px;height:28px">{{ dim.b_letter }}</div>
+            </div>
+          </div>
+
+          <!-- Dual bar -->
+          <div class="pole-bar-container" style="height:14px;border-radius:7px">
+            <div class="pole-bar-a" style="width:{{ dim.a_pct }}%"></div>
+            <div class="pole-bar-b" style="width:{{ dim.b_pct }}%"></div>
+          </div>
+
+          <!-- Percentages -->
+          <div class="flex justify-between text-xs text-gray-500 mt-1.5">
+            <span class="font-semibold text-blue-600">{{ dim.a_letter }}: {{ dim.a_pct }}%</span>
+            <span class="text-gray-400 text-xs">← preference strength →</span>
+            <span class="font-semibold text-purple-600">{{ dim.b_pct }}% :{{ dim.b_letter }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Confidence -->
+      <div class="mt-5 pt-5 border-t border-gray-100">
+        <div class="flex justify-between text-sm mb-2">
+          <span class="font-medium text-gray-700">Overall Assessment Confidence</span>
+          <span class="font-bold text-gray-800">{{ confidence_percent }}%</span>
+        </div>
+        <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-700
+            {% if confidence_percent >= 70 %}bg-green-500{% elif confidence_percent >= 50 %}bg-blue-500{% else %}bg-amber-500{% endif %}"
+               style="width:{{ confidence_percent }}%"></div>
+        </div>
+        <p class="text-xs text-gray-400 mt-1.5">
+          {% if confidence_percent >= 70 %}Strong clarity on your type — your preferences are well-defined.
+          {% elif confidence_percent >= 50 %}Moderate clarity — you show a mix of traits across dimensions.
+          {% else %}Some dimensions are close to the middle — this is normal and means you are adaptable.{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- Strengths & Development -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in-up" style="animation-delay:.1s">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-star text-green-500 text-xs"></i>
+          </span>
+          Core Strengths
+        </h3>
+        <ul class="space-y-2">
+          {% for strength in result.personality_type.strengths|split:", " %}
+          <li class="flex items-start gap-2 text-sm text-gray-700">
+            <i class="fas fa-check text-green-500 mt-0.5 flex-shrink-0 text-xs"></i>
+            {{ strength }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center">
+            <i class="fas fa-seedling text-amber-500 text-xs"></i>
+          </span>
+          Areas to Develop
+        </h3>
+        <ul class="space-y-2">
+          {% for weakness in result.personality_type.weaknesses|split:", " %}
+          <li class="flex items-start gap-2 text-sm text-gray-700">
+            <i class="fas fa-arrow-up text-amber-500 mt-0.5 flex-shrink-0 text-xs"></i>
+            {{ weakness }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Career Recommendations Preview -->
+    {% if career_recommendations %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style="animation-delay:.15s">
+      <div class="flex justify-between items-center mb-5">
+        <h2 class="text-lg font-bold text-gray-800">Recommended Career Paths</h2>
+        <a href="{% url 'recommendations:my_recommendations' %}" class="text-sm text-blue-600 font-medium hover:text-blue-800">
+          View All →
+        </a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for rec in career_recommendations %}
+        {% widthratio rec.overall_score 1 100 as pct %}
+        {% widthratio rec.personality_match_score 1 100 as p_pct %}
+        {% widthratio rec.academic_match_score 1 100 as a_pct %}
+        {% widthratio rec.market_demand_score 1 100 as m_pct %}
+        <div class="border border-gray-200 rounded-xl p-4 hover:border-blue-200 hover:shadow-sm transition card-hover">
+          <div class="flex justify-between items-start mb-2">
+            <h4 class="font-semibold text-gray-800 text-sm">{{ rec.career.name }}</h4>
+            <span class="badge-sm {% if pct >= 70 %}bg-green-100 text-green-700{% elif pct >= 50 %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+              {{ pct }}%
+            </span>
+          </div>
+          <p class="text-xs text-gray-500 mb-3">{{ rec.career.description|truncatewords:15 }}</p>
+          <!-- P A M mini bars -->
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2 text-xs">
+              <span class="w-4 text-purple-600 font-bold">P</span>
+              <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-purple-400 rounded-full" style="width:{{ p_pct }}%"></div>
+              </div>
+              <span class="text-gray-400 w-8 text-right">{{ p_pct }}%</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="w-4 text-blue-600 font-bold">A</span>
+              <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-400 rounded-full" style="width:{{ a_pct }}%"></div>
+              </div>
+              <span class="text-gray-400 w-8 text-right">{{ a_pct }}%</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="w-4 text-green-600 font-bold">M</span>
+              <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-green-400 rounded-full" style="width:{{ m_pct }}%"></div>
+              </div>
+              <span class="text-gray-400 w-8 text-right">{{ m_pct }}%</span>
+            </div>
+          </div>
+          <div class="mt-3 flex justify-between items-center">
+            <span class="badge-sm {% if rec.career.kenyan_market_demand == 'very_high' %}bg-red-100 text-red-700{% elif rec.career.kenyan_market_demand == 'high' %}bg-orange-100 text-orange-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+              {{ rec.career.get_kenyan_market_demand_display }}
+            </span>
+            <a href="{% url 'recommendations:career_detail' rec.career.id %}" class="text-blue-600 text-xs font-medium hover:underline">
+              Details →
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT sidebar -->
+  <div class="space-y-5">
+
+    <!-- Type at a glance -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up" style="animation-delay:.2s">
+      <h3 class="font-bold text-gray-800 mb-4">Type at a Glance</h3>
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        {% for letter in result.personality_type.mbti_type %}
+        <div class="text-center p-3 rounded-xl"
+             style="background: {% if letter == 'E' or letter == 'S' or letter == 'T' or letter == 'J' %}#eff6ff{% else %}#f5f3ff{% endif %}">
+          <div class="text-2xl font-black {% if letter == 'E' or letter == 'S' or letter == 'T' or letter == 'J' %}text-blue-600{% else %}text-purple-600{% endif %}">{{ letter }}</div>
+          <div class="text-xs text-gray-500 mt-0.5">
+            {% if letter == 'E' %}Extravert{% elif letter == 'I' %}Introvert
+            {% elif letter == 'S' %}Sensing{% elif letter == 'N' %}Intuitive
+            {% elif letter == 'T' %}Thinking{% elif letter == 'F' %}Feeling
+            {% elif letter == 'J' %}Judging{% elif letter == 'P' %}Perceiving{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="text-xs text-gray-500 border-t pt-3">
+        <strong>Famous {{ result.personality_type.mbti_type }}s:</strong>
+        {% if result.personality_type.mbti_type == 'INTJ' %}Elon Musk, Isaac Newton, C.S. Lewis
+        {% elif result.personality_type.mbti_type == 'INTP' %}Albert Einstein, Charles Darwin, Bill Gates
+        {% elif result.personality_type.mbti_type == 'ENTJ' %}Steve Jobs, Napoleon, Gordon Ramsay
+        {% elif result.personality_type.mbti_type == 'ENTP' %}Mark Twain, Leonardo da Vinci, Socrates
+        {% elif result.personality_type.mbti_type == 'INFJ' %}Martin Luther King Jr., Nelson Mandela, Plato
+        {% elif result.personality_type.mbti_type == 'INFP' %}J.R.R. Tolkien, Princess Diana, Frédéric Chopin
+        {% elif result.personality_type.mbti_type == 'ENFJ' %}Barack Obama, Oprah Winfrey, Maya Angelou
+        {% elif result.personality_type.mbti_type == 'ENFP' %}Robin Williams, Mark Twain, Walt Disney
+        {% elif result.personality_type.mbti_type == 'ISTJ' %}Angela Merkel, Warren Buffett, Queen Elizabeth II
+        {% elif result.personality_type.mbti_type == 'ISFJ' %}Mother Teresa, Rosa Parks, Kate Middleton
+        {% elif result.personality_type.mbti_type == 'ESTJ' %}Judge Judy, Sonia Sotomayor, Lyndon B. Johnson
+        {% elif result.personality_type.mbti_type == 'ESFJ' %}Taylor Swift, Bill Clinton, Jennifer Garner
+        {% elif result.personality_type.mbti_type == 'ISTP' %}Clint Eastwood, Bear Grylls, Michael Jordan
+        {% elif result.personality_type.mbti_type == 'ISFP' %}Michael Jackson, Frida Kahlo, David Bowie
+        {% elif result.personality_type.mbti_type == 'ESTP' %}Donald Trump, Ernest Hemingway, Madonna
+        {% elif result.personality_type.mbti_type == 'ESFP' %}Elvis Presley, Marilyn Monroe, Jamie Oliver
+        {% else %}Various achievers across many fields{% endif %}
+      </div>
+    </div>
+
+    <!-- Learning Style -->
+    {% if learning_style %}
+    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 text-white animate-fade-in-up" style="animation-delay:.25s">
+      <div class="text-xs uppercase tracking-wider text-indigo-200 mb-2 font-semibold">Your Learning Style</div>
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 bg-white bg-opacity-20 rounded-xl flex items-center justify-center text-2xl">
+          {% if learning_style.name == 'visual' %}👁{% elif learning_style.name == 'auditory' %}👂{% elif learning_style.name == 'reading' %}📖{% else %}🤲{% endif %}
+        </div>
+        <div>
+          <div class="font-bold text-lg">{{ learning_style.name|title }} Learner</div>
+          <div class="text-indigo-200 text-xs">{{ learning_style.description|truncatewords:12 }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Recommended careers (use saved recommendations for consistency with /recommendations/ page) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up" style="animation-delay:.3s">
+      <h3 class="font-bold text-gray-800 mb-3">Career Fields to Explore</h3>
+      <div class="flex flex-wrap gap-2">
+        {% if career_recommendations %}
+          {% for rec in career_recommendations %}
+            {% if rec.career %}
+            <span class="badge-sm bg-blue-50 text-blue-700 border border-blue-100">{{ rec.career.name }}</span>
+            {% else %}
+            <span class="badge-sm bg-blue-50 text-blue-700 border border-blue-100">{{ rec }}</span>
+            {% endif %}
+          {% endfor %}
+        {% elif result.personality_type.career_recommendations %}
+          {% for career in result.personality_type.career_recommendations|split:", " %}
+          <span class="badge-sm bg-blue-50 text-blue-700 border border-blue-100">{{ career }}</span>
+          {% endfor %}
+        {% else %}
+          <span class="text-sm text-gray-400">Complete your profile to unlock personalised career matches.</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 animate-fade-in-up" style="animation-delay:.35s">
+      <h3 class="font-bold text-gray-800 mb-3">Next Steps</h3>
+      <div class="space-y-2">
+        <a href="{% url 'recommendations:my_recommendations' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 transition text-sm font-medium text-gray-700">
+          <i class="fas fa-briefcase text-blue-500"></i> View Career Matches
+        </a>
+        <a href="{% url 'ai_coach:chat' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-green-50 transition text-sm font-medium text-gray-700">
+          <i class="fas fa-robot text-green-500"></i> Chat with AI Coach
+        </a>
+        <a href="{% url 'ai_coach:coaching_plan' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition text-sm font-medium text-gray-700">
+          <i class="fas fa-map-marked-alt text-purple-500"></i> View Coaching Plan
+        </a>
+        <a href="{% url 'profile' %}"
+           class="flex items-center gap-3 p-3 rounded-xl hover:bg-orange-50 transition text-sm font-medium text-gray-700">
+          <i class="fas fa-user-edit text-orange-500"></i> Complete Profile
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animate all progress bars on load
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.pole-bar-a, .pole-bar-b, [style*="width:"]').forEach(el => {
+    const w = el.style.width;
+    el.style.width = '0%';
+    setTimeout(() => { el.style.width = w; }, 300);
+  });
+});
+</script>
+{% endblock %}

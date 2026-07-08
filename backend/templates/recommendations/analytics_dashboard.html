@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Recommendation Analytics - CareerCompass Kenya{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Recommendation Analytics</h1>
+        <p class="text-gray-600">Insights into your career recommendations and compatibility scores</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card bg-gradient-blue text-white rounded-xl p-6 shadow-lg">
+            <div class="text-4xl font-bold mb-2">{{ total_recommendations }}</div>
+            <div class="text-blue-100">Total Recommendations</div>
+            <div class="text-sm text-blue-200 mt-2">Career options considered</div>
+        </div>
+        
+        <div class="stat-card bg-gradient-green text-white rounded-xl p-6 shadow-lg">
+            <div class="text-4xl font-bold mb-2">{{ avg_score|floatformat:1 }}%</div>
+            <div class="text-green-100">Average Compatibility</div>
+            <div class="text-sm text-green-200 mt-2">Your overall match score</div>
+        </div>
+        
+        <div class="stat-card bg-gradient-purple text-white rounded-xl p-6 shadow-lg">
+            <div class="text-4xl font-bold mb-2">{{ high_match }}</div>
+            <div class="text-purple-100">High Matches</div>
+            <div class="text-sm text-purple-200 mt-2">Excellent career options</div>
+        </div>
+        
+        <div class="stat-card bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl p-6 shadow-lg">
+            <div class="text-4xl font-bold mb-2">
+                {% if top_category %}
+                    {{ top_category.category }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+            <div class="text-orange-100">Top Category</div>
+            <div class="text-sm text-orange-200 mt-2">Most recommended field</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column -->
+        <div class="lg:col-span-2">
+            <!-- Compatibility Distribution -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">Compatibility Distribution</h2>
+                
+                <div class="space-y-6">
+                    <!-- High Compatibility -->
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">High Compatibility (70%+)</span>
+                            <span class="text-sm font-medium text-gray-700">{{ high_match }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-green-500 h-3 rounded-full" style="width: {% widthratio high_match total_recommendations 100 %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Medium Compatibility -->
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">Medium Compatibility (50-69%)</span>
+                            <span class="text-sm font-medium text-gray-700">{{ medium_match }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-yellow-500 h-3 rounded-full" style="width: {% widthratio medium_match total_recommendations 100 %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Low Compatibility -->
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">Low Compatibility (&lt;50%)</span>
+                            <span class="text-sm font-medium text-gray-700">{{ low_match }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-red-500 h-3 rounded-full" style="width: {% widthratio low_match total_recommendations 100 %}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Recommendations -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">Recent Recommendations</h2>
+                
+                {% if has_recommendations %}
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Career</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Overall Score</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Market Demand</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for rec in recommendations %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-4">
+                                    <div class="font-medium text-gray-900">{{ rec.career.name }}</div>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
+                                            <div class="h-2 rounded-full 
+                                                {% if rec.overall_score >= 0.7 %}bg-green-500
+                                                {% elif rec.overall_score >= 0.5 %}bg-yellow-500
+                                                {% else %}bg-red-500{% endif %}" 
+                                                style="width: {{ rec.overall_score|floatformat:0 }}%">
+                                            </div>
+                                        </div>
+                                        <span class="text-sm font-medium">{{ rec.overall_score|floatformat:0 }}%</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="text-sm text-gray-700">{{ rec.career.get_category_display }}</span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="text-xs px-2 py-1 rounded 
+                                        {% if rec.career.kenyan_market_demand == 'very_high' %}bg-red-100 text-red-800
+                                        {% elif rec.career.kenyan_market_demand == 'high' %}bg-orange-100 text-orange-800
+                                        {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                        {{ rec.career.get_kenyan_market_demand_display }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="text-sm text-gray-500">{{ rec.created_at|date:"M d" }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-chart-bar text-gray-400 text-4xl mb-4"></i>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">No recommendations yet</h3>
+                    <p class="text-gray-600 mb-6">Generate career recommendations to see analytics</p>
+                    <a href="{% url 'assessments:assessments-start' %}" 
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 btn-primary">
+                        <i class="fas fa-play-circle mr-2"></i> Start Assessment
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-8">
+            <!-- Category Distribution -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">Category Distribution</h2>
+                
+                <div class="space-y-4">
+                    {% for category in category_distribution|slice:":5" %}
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm text-gray-600">{{ category.career__category|default:"Uncategorized" }}</span>
+                            <span class="text-sm font-medium">{{ category.count }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full bg-blue-500" style="width: {% widthratio category.count total_recommendations 100 %}%"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 text-sm">No category data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Market Demand Distribution -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">Market Demand</h2>
+                
+                <div class="space-y-4">
+                    {% for market in market_distribution %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">
+                            {% if market.career__kenyan_market_demand == 'very_high' %}Very High
+                            {% elif market.career__kenyan_market_demand == 'high' %}High
+                            {% elif market.career__kenyan_market_demand == 'medium' %}Medium
+                            {% else %}Low{% endif %}
+                        </span>
+                        <div class="flex items-center">
+                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                <div class="h-2 rounded-full 
+                                    {% if market.career__kenyan_market_demand == 'very_high' %}bg-red-500
+                                    {% elif market.career__kenyan_market_demand == 'high' %}bg-orange-500
+                                    {% else %}bg-blue-500{% endif %}" 
+                                    style="width: {% widthratio market.count total_recommendations 100 %}%">
+                                </div>
+                            </div>
+                            <span class="text-sm font-medium">{{ market.count }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 text-sm">No market demand data available</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Insights -->
+            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6">
+                <h2 class="text-lg font-semibold text-purple-800 mb-4">Your Insights</h2>
+                
+                <div class="space-y-4">
+                    {% if high_match > 0 %}
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-star text-green-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">{{ high_match }} excellent matches</div>
+                            <p class="text-gray-600 text-sm">You have strong compatibility with {{ high_match }} careers</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if avg_score >= 70 %}
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-chart-line text-blue-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Above average compatibility</div>
+                            <p class="text-gray-600 text-sm">Your overall score of {{ avg_score|floatformat:1 }}% is excellent</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-lightbulb text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Next Steps</div>
+                            <p class="text-gray-600 text-sm">Explore high-match careers and create a learning plan</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Section -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="{% url 'recommendations:my_recommendations' %}" 
+           class="bg-white border border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 card-hover">
+            <div class="text-2xl font-bold text-blue-600 mb-2">
+                {% if has_recommendations %}{{ total_recommendations }}{% else %}0{% endif %}
+            </div>
+            <div class="font-medium text-gray-800">View All Recommendations</div>
+            <div class="text-sm text-gray-600 mt-1">See detailed career matches</div>
+        </a>
+        
+        <a href="{% url 'recommendations:career_comparison' %}" 
+           class="bg-white border border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 card-hover">
+            <div class="text-2xl font-bold text-green-600 mb-2">
+                {% if has_recommendations %}Compare{% else %}--{% endif %}
+            </div>
+            <div class="font-medium text-gray-800">Compare Careers</div>
+            <div class="text-sm text-gray-600 mt-1">Side-by-side analysis</div>
+        </a>
+        
+        <a href="{% url 'ai_coach:coaching_plan' %}" 
+           class="bg-white border border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 card-hover">
+            <div class="text-2xl font-bold text-purple-600 mb-2">Plan</div>
+            <div class="font-medium text-gray-800">Create Learning Plan</div>
+            <div class="text-sm text-gray-600 mt-1">Personalized roadmap</div>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Browse Careers – CareerCompass Kenya{% endblock %}
+{% block page_title %}Explore Careers{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+  <!-- Filters Sidebar -->
+  <div class="lg:col-span-1">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sticky top-4">
+      <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fas fa-filter text-blue-500 text-sm"></i> Filter Careers
+      </h3>
+
+      <!-- Search -->
+      <form method="GET" action="{% url 'recommendations:career_list' %}" class="mb-5">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-search text-gray-400 text-xs"></i>
+          </div>
+          <input type="text" name="search" placeholder="Search careers…"
+                 value="{{ request.GET.search|default:'' }}"
+                 class="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm
+                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+        </div>
+      </form>
+
+      <!-- Category filter -->
+      <div class="mb-5">
+        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Category</h4>
+        <div class="space-y-1">
+          <a href="{% url 'recommendations:career_list' %}{% if request.GET.demand %}?demand={{ request.GET.demand }}{% endif %}"
+             class="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition
+                    {% if not request.GET.category %}bg-blue-50 text-blue-700 font-semibold{% else %}text-gray-600 hover:text-blue-600 hover:bg-gray-50{% endif %}">
+            All Categories
+          </a>
+          {% for cat in categories %}
+          <a href="?category={{ cat }}{% if request.GET.demand %}&demand={{ request.GET.demand }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+             class="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition
+                    {% if request.GET.category == cat %}bg-blue-50 text-blue-700 font-semibold{% else %}text-gray-600 hover:text-blue-600 hover:bg-gray-50{% endif %}">
+            {{ cat|title }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Demand filter -->
+      <div>
+        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Market Demand</h4>
+        <div class="space-y-1">
+          {% for val, label, color in demand_choices %}
+          <a href="?demand={{ val }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}"
+             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition
+                    {% if request.GET.demand == val %}{{ color }} font-semibold{% else %}text-gray-600 hover:bg-gray-50{% endif %}">
+            <span class="w-2 h-2 rounded-full {{ color|default:'bg-gray-400' }}"></span>
+            {{ label }}
+          </a>
+          {% empty %}
+          <a href="?demand=very_high" class="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg">Very High</a>
+          <a href="?demand=high"      class="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg">High</a>
+          <a href="?demand=medium"    class="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg">Medium</a>
+          <a href="?demand=low"       class="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg">Low</a>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if request.GET.category or request.GET.demand or request.GET.search %}
+      <div class="mt-5 pt-4 border-t border-gray-100">
+        <a href="{% url 'recommendations:career_list' %}"
+           class="text-sm text-red-600 hover:text-red-800 font-medium transition">
+          <i class="fas fa-times-circle mr-1"></i> Clear all filters
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Career Grid -->
+  <div class="lg:col-span-3">
+    <!-- Results summary -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="text-sm text-gray-500">
+        {% if careers %}
+          Showing <span class="font-semibold text-gray-800">{{ careers|length }}</span> career{{ careers|length|pluralize }}
+          {% if request.GET.category %} in <span class="font-semibold text-gray-800">{{ request.GET.category|title }}</span>{% endif %}
+          {% if request.GET.search %} for "<span class="font-semibold text-gray-800">{{ request.GET.search }}</span>"{% endif %}
+        {% else %}
+          No careers found
+        {% endif %}
+      </div>
+      {% if request.user.is_authenticated %}
+      <a href="{% url 'recommendations:my_recommendations' %}"
+         class="text-sm text-blue-600 hover:text-blue-800 font-medium transition">
+        My Matches →
+      </a>
+      {% endif %}
+    </div>
+
+    {% if careers %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for career in careers %}
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 card-hover animate-fade-in-up"
+           style="animation-delay:{{ forloop.counter0 }}0ms">
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex-1 min-w-0 mr-3">
+            <h3 class="font-bold text-gray-800 text-base truncate">{{ career.name }}</h3>
+            <span class="text-xs text-gray-500">{{ career.category|default:"General" }}</span>
+          </div>
+          <span class="badge-sm flex-shrink-0
+            {% if career.kenyan_market_demand == 'very_high' %}bg-red-100 text-red-700
+            {% elif career.kenyan_market_demand == 'high' %}bg-orange-100 text-orange-700
+            {% elif career.kenyan_market_demand == 'medium' %}bg-blue-100 text-blue-700
+            {% else %}bg-gray-100 text-gray-600{% endif %}">
+            {{ career.get_kenyan_market_demand_display }}
+          </span>
+        </div>
+
+        <p class="text-gray-500 text-sm leading-relaxed mb-4">
+          {{ career.description|truncatewords:20 }}
+        </p>
+
+        {% if career.average_salary %}
+        <div class="flex items-center gap-1 text-xs text-green-700 mb-3">
+          <i class="fas fa-money-bill-wave"></i>
+          <span>KES {{ career.average_salary|floatformat:0 }} avg. salary</span>
+        </div>
+        {% endif %}
+
+        <div class="flex justify-between items-center">
+          <div class="flex gap-1 flex-wrap">
+            {% for s in career.required_subjects.all|slice:":3" %}
+            <span class="badge-sm bg-gray-100 text-gray-600">{{ s.name }}</span>
+            {% endfor %}
+            {% if career.required_subjects.count > 3 %}
+            <span class="badge-sm bg-gray-100 text-gray-400">+{{ career.required_subjects.count|add:"-3" }} more</span>
+            {% endif %}
+          </div>
+          <a href="{% url 'recommendations:career_detail' career.id %}"
+             class="text-blue-600 hover:text-blue-800 text-sm font-semibold transition flex-shrink-0 ml-2">
+            Details →
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+      <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+      <h3 class="text-lg font-bold text-gray-700 mb-2">No careers found</h3>
+      <p class="text-gray-400 text-sm mb-5">
+        Try adjusting your filters or searching for a different term.
+      </p>
+      <a href="{% url 'recommendations:career_list' %}"
+         class="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+        Clear Filters
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

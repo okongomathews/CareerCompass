@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Personality Assessment – CareerCompass Kenya{% endblock %}
+{% block page_title %}Personality Assessment{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+  <!-- Header -->
+  <div class="text-center mb-8 animate-fade-in-up">
+    <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+      <i class="fas fa-brain text-white text-3xl"></i>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">MBTI Personality Assessment</h1>
+    <p class="text-gray-500 max-w-lg mx-auto">
+      Discover your personality type through {{ total_questions }} carefully designed questions.
+      Your results unlock personalised career recommendations tailored to Kenya's job market.
+    </p>
+  </div>
+
+  <!-- Info Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 text-center animate-fade-in-up" style="animation-delay:.05s">
+      <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+        <i class="fas fa-list-ol text-blue-600 text-xl"></i>
+      </div>
+      <div class="text-2xl font-black text-blue-600 mb-1">{{ total_questions }}</div>
+      <div class="text-sm text-gray-600 font-medium">Questions</div>
+      <div class="text-xs text-gray-400 mt-1">15 per dimension</div>
+    </div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 text-center animate-fade-in-up" style="animation-delay:.1s">
+      <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+        <i class="fas fa-clock text-purple-600 text-xl"></i>
+      </div>
+      <div class="text-2xl font-black text-purple-600 mb-1">15–20</div>
+      <div class="text-sm text-gray-600 font-medium">Minutes</div>
+      <div class="text-xs text-gray-400 mt-1">At your own pace</div>
+    </div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 text-center animate-fade-in-up" style="animation-delay:.15s">
+      <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+        <i class="fas fa-layer-group text-green-600 text-xl"></i>
+      </div>
+      <div class="text-2xl font-black text-green-600 mb-1">16</div>
+      <div class="text-sm text-gray-600 font-medium">Possible Types</div>
+      <div class="text-xs text-gray-400 mt-1">MBTI framework</div>
+    </div>
+  </div>
+
+  <!-- What we measure -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 animate-fade-in-up" style="animation-delay:.2s">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">What the assessment measures</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for dim in dimensions %}
+      <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-black text-sm"
+             style="background:{% if dim.code == 'EI' %}#3b82f6{% elif dim.code == 'SN' %}#8b5cf6{% elif dim.code == 'TF' %}#ec4899{% else %}#f59e0b{% endif %}">
+          {{ dim.code }}
+        </div>
+        <div>
+          <div class="font-semibold text-gray-800 text-sm">{{ dim.dimension_a }} <span class="text-gray-400 font-normal">vs</span> {{ dim.dimension_b }}</div>
+          <div class="text-xs text-gray-500 mt-0.5">{{ dim.description|truncatewords:15 }}</div>
+        </div>
+      </div>
+      {% empty %}
+      {% for pair in default_dimensions %}
+      <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+        <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-black text-sm bg-blue-500">
+          {{ pair.0 }}
+        </div>
+        <div>
+          <div class="font-semibold text-gray-800 text-sm">{{ pair.1 }} vs {{ pair.2 }}</div>
+          <div class="text-xs text-gray-500 mt-0.5">{{ pair.3 }}</div>
+        </div>
+      </div>
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 animate-fade-in-up" style="animation-delay:.25s">
+    <h3 class="font-bold text-amber-800 mb-3 flex items-center gap-2">
+      <i class="fas fa-lightbulb text-amber-500"></i> Tips for accurate results
+    </h3>
+    <ul class="space-y-2 text-sm text-amber-700">
+      <li class="flex items-start gap-2"><i class="fas fa-check-circle text-amber-500 mt-0.5 flex-shrink-0"></i>Answer based on your natural tendencies, not what you think is "correct"</li>
+      <li class="flex items-start gap-2"><i class="fas fa-check-circle text-amber-500 mt-0.5 flex-shrink-0"></i>Go with your first instinct — don't overthink each question</li>
+      <li class="flex items-start gap-2"><i class="fas fa-check-circle text-amber-500 mt-0.5 flex-shrink-0"></i>Think about how you are most of the time, not just at school or work</li>
+      <li class="flex items-start gap-2"><i class="fas fa-check-circle text-amber-500 mt-0.5 flex-shrink-0"></i>There are no right or wrong answers — all 16 types have equal value</li>
+    </ul>
+  </div>
+
+  {% if has_previous_assessment %}
+  <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 mb-6 animate-fade-in-up flex items-start gap-3">
+    <i class="fas fa-circle-info text-blue-500 mt-0.5 flex-shrink-0"></i>
+    <div>
+      <div class="font-semibold text-blue-800 text-sm">You have a previous assessment</div>
+      <div class="text-blue-600 text-sm mt-1">
+        Starting a new test will replace your previous results.
+        <a href="{% url 'assessments:assessments-results' %}" class="font-semibold underline">View your current results →</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- CTA -->
+  <div class="text-center animate-fade-in-up" style="animation-delay:.3s">
+    <a href="{% url 'assessments:assessments-question' %}"
+       class="inline-flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-indigo-700 transition text-lg">
+      <i class="fas fa-play-circle"></i>
+      Begin Assessment
+      <i class="fas fa-arrow-right text-sm opacity-75"></i>
+    </a>
+    <p class="text-xs text-gray-400 mt-3">Your progress is auto-saved. You can pause and resume anytime.</p>
+  </div>
+</div>
+{% endblock %}

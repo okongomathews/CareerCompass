@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Assessment Report – CareerCompass Kenya{% endblock %}
+{% block page_title %}Assessment Analytics Report{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+  <!-- Filter Panel -->
+  <form method="GET" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6 no-print">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-gray-700 text-sm flex items-center gap-2">
+        <i class="fas fa-filter text-blue-500"></i>Filter Report
+        {% if active_filters %}
+        <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Active</span>
+        {% endif %}
+      </h3>
+      {% if active_filters %}
+      <a href="{% url 'analytics:assessment_report' %}" class="text-xs text-gray-400 hover:text-red-500 transition flex items-center gap-1">
+        <i class="fas fa-times"></i> Clear all filters
+      </a>
+      {% endif %}
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5"><i class="fas fa-search mr-1 text-gray-400"></i>Student Name / Username</label>
+        <input type="text" name="q" value="{{ search }}" placeholder="Search by name or username…"
+               class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5"><i class="fas fa-school mr-1 text-gray-400"></i>School</label>
+        <select name="school" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition">
+          <option value="">All Schools</option>
+          {% for school in schools %}
+          <option value="{{ school.id }}" {% if selected_school == school.id|stringformat:'s' %}selected{% endif %}>{{ school.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5"><i class="fas fa-layer-group mr-1 text-gray-400"></i>Grade Level</label>
+        <select name="grade" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition">
+          <option value="">All Grades</option>
+          {% for val, label in grade_choices %}
+          <option value="{{ val }}" {% if selected_grade == val %}selected{% endif %}>{{ label }}</option>
+          {% empty %}
+          <option value="form1">Form 1</option><option value="form2">Form 2</option>
+          <option value="form3">Form 3</option><option value="form4">Form 4</option>
+          <option value="university">University</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5"><i class="fas fa-brain mr-1 text-gray-400"></i>Personality Type</label>
+        <select name="mbti" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition">
+          <option value="">All Types</option>
+          {% for mtype in mbti_types %}
+          <option value="{{ mtype }}" {% if selected_mbti == mtype %}selected{% endif %}>{{ mtype }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5"><i class="fas fa-calendar-day mr-1 text-gray-400"></i>Completed From</label>
+        <input type="date" name="date_from" value="{{ selected_date_from }}"
+               class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5"><i class="fas fa-calendar-check mr-1 text-gray-400"></i>Completed To</label>
+        <input type="date" name="date_to" value="{{ selected_date_to }}"
+               class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 transition">
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-3 mt-4">
+      <button type="submit" class="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-sm">
+        <i class="fas fa-chart-bar"></i> Generate Report
+      </button>
+      <a href="?{{ request.GET.urlencode }}&format=pdf"
+         class="flex items-center gap-2 px-5 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition shadow-sm">
+        <i class="fas fa-file-pdf"></i> Download PDF
+      </a>
+      <button type="button" onclick="window.print()"
+              class="flex items-center gap-2 px-5 py-2 bg-gray-600 text-white rounded-xl text-sm font-semibold hover:bg-gray-700 transition shadow-sm">
+        <i class="fas fa-print"></i> Print
+      </button>
+      <a href="{% url 'analytics:student_report_list' %}"
+         class="flex items-center gap-2 px-5 py-2 border border-gray-300 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">
+        <i class="fas fa-file-pdf text-red-500"></i> Individual PDF Reports
+      </a>
+    </div>
+  </form>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="stat-card text-center animate-fade-in-up">
+      <div class="text-3xl font-black text-blue-600">{{ total_assessments }}</div>
+      <div class="text-xs text-gray-500 mt-1 font-medium">Assessments{% if active_filters %}<br><span class="text-blue-400">(filtered)</span>{% endif %}</div>
+    </div>
+    <div class="stat-card text-center animate-fade-in-up" style="animation-delay:.05s">
+      <div class="text-3xl font-black text-green-600">{{ completion_rate }}%</div>
+      <div class="text-xs text-gray-500 mt-1 font-medium">Completion Rate</div>
+    </div>
+    <div class="stat-card text-center animate-fade-in-up" style="animation-delay:.1s">
+      <div class="text-3xl font-black text-purple-600">{{ avg_confidence }}%</div>
+      <div class="text-xs text-gray-500 mt-1 font-medium">Avg. Confidence</div>
+    </div>
+    <div class="stat-card text-center animate-fade-in-up" style="animation-delay:.15s">
+      <div class="text-3xl font-black text-orange-500">{{ avg_scores.avg_o }}%</div>
+      <div class="text-xs text-gray-500 mt-1 font-medium">Avg. Overall Match</div>
+    </div>
+  </div>
+
+  <!-- Score Bars with interpretation guide -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 animate-fade-in-up" style="animation-delay:.2s">
+    <div class="flex items-start justify-between mb-5">
+      <h2 class="text-lg font-bold text-gray-800">Average Compatibility Scores</h2>
+      <button onclick="document.getElementById('scoreGuide').classList.toggle('hidden')"
+              class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 no-print">
+        <i class="fas fa-circle-info"></i> How to read these
+      </button>
+    </div>
+    <div id="scoreGuide" class="hidden mb-5 bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-800 leading-relaxed no-print">
+      <p class="font-semibold mb-2">Understanding the three scores:</p>
+      <p class="mb-1"><span class="font-bold text-purple-700">Personality (P):</span> Average MBTI→career alignment. High = students' personality types strongly match recommended careers.</p>
+      <p class="mb-1"><span class="font-bold text-blue-700">Academic (A):</span> Subject→career alignment. High = students' subjects align with recommended careers (e.g. Sciences → Medicine).</p>
+      <p class="mb-1"><span class="font-bold text-green-700">Market (M):</span> Average Kenyan labour-market demand of recommended careers. High = careers are in-demand in Kenya.</p>
+      <p class="mb-1"><span class="font-bold text-amber-700">Overall:</span> Weighted composite of all three. Primary quality indicator.</p>
+      <p class="mt-2 text-gray-500">If bars show identical low values (e.g. 5% everywhere), this means only one student has data — averages equal that student's individual scores. More student data produces meaningful distributions.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {% for label, val, color in score_bars %}
+      <div>
+        <div class="flex justify-between text-sm mb-1.5">
+          <span class="font-semibold text-gray-700">{{ label }}</span>
+          <span class="font-bold" style="color:{{ color }}">{{ val }}%</span>
+        </div>
+        <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-700" style="width:{{ val }}%; background:{{ color }}"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Two-col: personality breakdown + top careers -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style="animation-delay:.25s">
+      <h2 class="text-base font-bold text-gray-800 mb-4">Personality Type Breakdown</h2>
+      {% if personality_counts %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase rounded-l-lg">Type</th>
+              <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase">Count</th>
+              <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase">Share</th>
+              <th class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase rounded-r-lg">Bar</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            {% for row in personality_counts %}
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-3 py-2.5 font-bold text-purple-700">{{ row.personality_type__mbti_type|default:"Unknown" }}</td>
+              <td class="px-3 py-2.5 font-semibold text-gray-800">{{ row.count }}</td>
+              <td class="px-3 py-2.5 text-gray-500">{% widthratio row.count total_assessments|default:1 100 %}%</td>
+              <td class="px-3 py-2.5 w-20">
+                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-purple-500 rounded-full" style="width:{% widthratio row.count total_assessments|default:1 100 %}%"></div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-8 text-gray-400">
+        <i class="fas fa-database text-3xl mb-3"></i>
+        <p class="text-sm">No assessment data for these filters.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style="animation-delay:.3s">
+      <h2 class="text-base font-bold text-gray-800 mb-4">Top Recommended Careers</h2>
+      {% if top_careers %}
+      <div class="space-y-2.5">
+        {% for row in top_careers %}
+        <div class="flex items-center gap-3">
+          <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-xs font-bold flex items-center justify-center flex-shrink-0">{{ forloop.counter }}</span>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-gray-800 text-sm truncate">{{ row.career__name|default:"—" }}</div>
+            <div class="text-xs text-gray-400 truncate">{{ row.career__category|default:"Uncategorised" }}</div>
+          </div>
+          <span class="text-xs font-bold text-gray-500 flex-shrink-0">{{ row.count }}×</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-8 text-gray-400">
+        <i class="fas fa-briefcase text-3xl mb-3"></i>
+        <p class="text-sm">No recommendation data for these filters.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Results Table -->
+  {% if recent_results %}
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 animate-fade-in-up" style="animation-delay:.35s">
+    <h2 class="text-base font-bold text-gray-800 mb-4">Recent Assessments <span class="text-sm font-normal text-gray-400 ml-2">(up to 20 most recent)</span></h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase rounded-l-lg">Student</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">MBTI</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">School</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Confidence</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Completed</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase rounded-r-lg">PDF</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for result in recent_results %}
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-4 py-3 font-medium text-gray-800">{{ result.student.user.get_full_name|default:result.student.user.username }}</td>
+            <td class="px-4 py-3">
+              <span class="inline-flex px-2 py-0.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold">{{ result.personality_type.mbti_type }}</span>
+            </td>
+            <td class="px-4 py-3 text-gray-500 text-xs hidden sm:table-cell">{{ result.student.school.name|default:"—" }}</td>
+            <td class="px-4 py-3 hidden md:table-cell">
+              {% with c=result.get_confidence_percent %}
+              <span class="text-xs font-semibold {% if c >= 70 %}text-green-600{% elif c >= 40 %}text-amber-600{% else %}text-red-500{% endif %}">{{ c }}%</span>
+              {% endwith %}
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500 hidden lg:table-cell">{{ result.created_at|date:"d M Y" }}</td>
+            <td class="px-4 py-3 text-right">
+              <a href="{% url 'analytics:career_report_pdf' student_id=result.student.id %}"
+                 class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition">
+                <i class="fas fa-file-pdf text-xs"></i> <span class="hidden sm:inline">PDF</span>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

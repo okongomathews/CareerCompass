@@ -1,0 +1,465 @@
+<!-- templates/coaching/dashboard.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Coaching Dashboard - CareerCompass Kenya{% endblock %}
+
+{% block extra_css %}
+<style>
+    .coaching-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+    }
+    .coaching-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-color: #3b82f6;
+    }
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    .session-card {
+        border-left: 4px solid;
+    }
+    .session-ai {
+        border-left-color: #3b82f6;
+    }
+    .session-human {
+        border-left-color: #10b981;
+    }
+    .session-group {
+        border-left-color: #8b5cf6;
+    }
+    .goal-progress {
+        height: 8px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Coaching Dashboard</h1>
+                    <p class="mt-2 text-gray-600">Premium career coaching for your success journey</p>
+                </div>
+                
+                {% if not has_active_subscription %}
+                <a href="{% url 'coaching:plan_selection' %}" 
+                   class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="fas fa-crown mr-2"></i>
+                    Get Premium Coaching
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if subscription %}
+            <div class="mt-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div class="flex-1">
+                        <div class="flex items-center mb-2">
+                            <h2 class="text-xl font-bold mr-4">{{ subscription.plan.name }}</h2>
+                            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
+                                Active until {{ subscription.end_date|date:"F d, Y" }}
+                            </span>
+                        </div>
+                        <p class="opacity-90 mb-4">{{ subscription.plan.description }}</p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold">{{ subscription.get_remaining_sessions.ai_sessions }}</div>
+                                <div class="text-sm opacity-90">AI Sessions Left</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold">{{ subscription.get_remaining_sessions.human_sessions }}</div>
+                                <div class="text-sm opacity-90">Human Sessions Left</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold">{{ subscription.get_remaining_sessions.career_assessments }}</div>
+                                <div class="text-sm opacity-90">Assessments Left</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold">{{ subscription.get_remaining_sessions.learning_paths }}</div>
+                                <div class="text-sm opacity-90">Learning Paths Left</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 md:mt-0 md:ml-6">
+                        <a href="{% url 'coaching:subscription_management' %}" 
+                           class="inline-flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 font-medium">
+                            Manage Subscription
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Quick Actions & Sessions -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Quick Stats -->
+                {% if progress_summary %}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm p-6 coaching-card">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-calendar-check text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">{{ progress_summary.sessions.completed }}</div>
+                                <div class="text-gray-600">Sessions Completed</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm p-6 coaching-card">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-bullseye text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">{{ progress_summary.goals.completed }}</div>
+                                <div class="text-gray-600">Goals Achieved</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm p-6 coaching-card">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-tasks text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">{{ progress_summary.action_items.completed }}</div>
+                                <div class="text-gray-600">Actions Completed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-xl shadow-sm p-6 coaching-card">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <a href="{% url 'coaching:ai_coaching_chat' %}" 
+                           class="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mr-3 group-hover:bg-blue-200">
+                                <i class="fas fa-robot text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">AI Coaching Chat</p>
+                                <p class="text-sm text-gray-500">Get instant AI-powered career advice</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{% url 'coaching:book_human_session' %}" 
+                           class="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors group">
+                            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mr-3 group-hover:bg-green-200">
+                                <i class="fas fa-user-tie text-green-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Book Human Coach</p>
+                                <p class="text-sm text-gray-500">1:1 session with expert career coach</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{% url 'coaching:career_assessment' %}" 
+                           class="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
+                            <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center mr-3 group-hover:bg-purple-200">
+                                <i class="fas fa-chart-bar text-purple-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Career Assessment</p>
+                                <p class="text-sm text-gray-500">AI-powered career suitability analysis</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{% url 'coaching:generate_learning_path' %}" 
+                           class="flex items-center p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors group">
+                            <div class="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center mr-3 group-hover:bg-yellow-200">
+                                <i class="fas fa-graduation-cap text-yellow-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">Learning Path</p>
+                                <p class="text-sm text-gray-500">Personalized skill development plan</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Upcoming Sessions -->
+                <div class="bg-white rounded-xl shadow-sm p-6 coaching-card">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">Upcoming Sessions</h2>
+                        <a href="{% url 'coaching:session_history' %}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
+                            View All
+                        </a>
+                    </div>
+                    
+                    {% if upcoming_sessions %}
+                    <div class="space-y-4">
+                        {% for session in upcoming_sessions %}
+                        <div class="session-card session-{{ session.session_type }} bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">{{ session.title }}</h3>
+                                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                                        <i class="fas fa-calendar mr-2"></i>
+                                        {{ session.scheduled_date|date:"F d, Y" }}
+                                        <i class="fas fa-clock ml-4 mr-2"></i>
+                                        {{ session.scheduled_time|time:"g:i A" }}
+                                    </div>
+                                    {% if session.coach %}
+                                    <div class="mt-1 flex items-center text-sm text-gray-500">
+                                        <i class="fas fa-user-tie mr-2"></i>
+                                        Coach: {{ session.coach.get_full_name }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <span class="px-3 py-1 text-xs font-medium rounded-full 
+                                    {% if session.session_type == 'ai' %}bg-blue-100 text-blue-800
+                                    {% elif session.session_type == 'human' %}bg-green-100 text-green-800
+                                    {% else %}bg-purple-100 text-purple-800{% endif %}">
+                                    {{ session.get_session_type_display }}
+                                </span>
+                            </div>
+                            <div class="mt-4 flex space-x-3">
+                                <a href="{% url 'coaching:session_detail' session.id %}" 
+                                   class="text-sm text-blue-600 hover:text-blue-500">
+                                    View Details
+                                </a>
+                                {% if session.is_virtual and session.meeting_link %}
+                                <a href="{{ session.meeting_link }}" target="_blank" 
+                                   class="text-sm text-green-600 hover:text-green-500">
+                                    Join Meeting
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-calendar-times text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">No upcoming sessions scheduled</p>
+                        {% if subscription and subscription.can_use_human_session %}
+                        <a href="{% url 'coaching:book_human_session' %}" class="mt-4 inline-flex items-center text-blue-600 hover:text-blue-500">
+                            <i class="fas fa-plus mr-1"></i>
+                            Book your first session
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Active Goals -->
+                <div class="bg-white rounded-xl shadow-sm p-6 coaching-card">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">Active Goals</h2>
+                        <a href="{% url 'coaching:career_goals' %}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
+                            View All
+                        </a>
+                    </div>
+                    
+                    {% if active_goals %}
+                    <div class="space-y-6">
+                        {% for goal in active_goals %}
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-medium text-gray-900">{{ goal.title }}</h3>
+                                <span class="text-xs px-2 py-1 rounded-full 
+                                    {% if goal.priority == 4 %}bg-red-100 text-red-800
+                                    {% elif goal.priority == 3 %}bg-orange-100 text-orange-800
+                                    {% elif goal.priority == 2 %}bg-blue-100 text-blue-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ goal.get_priority_display }}
+                                </span>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-1">
+                                    <div class="goal-progress bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="goal-progress bg-blue-500 rounded-full" 
+                                             style="width: {{ goal.progress_percentage }}%"></div>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">{{ goal.progress_percentage }}%</span>
+                            </div>
+                            
+                            <div class="mt-2 text-sm text-gray-500">
+                                <i class="fas fa-flag mr-1"></i>
+                                Target: {{ goal.target_date|date:"M d, Y" }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-bullseye text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">No active goals set</p>
+                        <a href="{% url 'coaching:career_goals' %}" class="mt-4 inline-flex items-center text-blue-600 hover:text-blue-500">
+                            <i class="fas fa-plus mr-1"></i>
+                            Set your first goal
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right Column: Recommendations & Resources -->
+            <div class="space-y-8">
+                <!-- Personalized Recommendations -->
+                {% if progress_summary and progress_summary.recommendations %}
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Personalized Recommendations</h2>
+                    
+                    <div class="space-y-4">
+                        {% for rec in progress_summary.recommendations %}
+                        <div class="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mt-1">
+                                    {% if rec.type == 'session' %}
+                                    <i class="fas fa-video text-blue-500"></i>
+                                    {% elif rec.type == 'goal' %}
+                                    <i class="fas fa-bullseye text-green-500"></i>
+                                    {% else %}
+                                    <i class="fas fa-tasks text-purple-500"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="font-medium text-gray-900">{{ rec.title }}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">{{ rec.message }}</p>
+                                    {% if rec.action %}
+                                    <a href="{{ rec.action }}" class="mt-2 inline-flex items-center text-sm text-blue-600 hover:text-blue-500">
+                                        Take Action
+                                        <i class="fas fa-arrow-right ml-1"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Pending Actions -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Pending Actions</h2>
+                    
+                    {% if pending_actions %}
+                    <div class="space-y-4">
+                        {% for action in pending_actions %}
+                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <div>
+                                <p class="font-medium text-gray-900">{{ action.title }}</p>
+                                <p class="text-sm text-gray-500">Due {{ action.due_date|date:"M d" }}</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full 
+                                {% if action.priority == 'high' %}bg-red-100 text-red-800
+                                {% elif action.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ action.get_priority_display }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4">
+                        <a href="{% url 'coaching:session_history' %}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
+                            View all action items →
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle text-gray-300 text-3xl mb-2"></i>
+                        <p class="text-gray-500">No pending actions</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Resource Recommendations -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Recommended Resources</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                            <div class="flex items-start">
+                                <i class="fas fa-graduation-cap text-blue-500 mt-1 mr-3"></i>
+                                <div>
+                                    <p class="font-medium text-gray-900">ALX Software Engineering</p>
+                                    <p class="text-sm text-gray-600 mt-1">12-month intensive program for aspiring software engineers in Africa</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 bg-green-50 border border-green-100 rounded-lg">
+                            <div class="flex items-start">
+                                <i class="fas fa-book text-green-500 mt-1 mr-3"></i>
+                                <div>
+                                    <p class="font-medium text-gray-900">Career Development Books</p>
+                                    <p class="text-sm text-gray-600 mt-1">Curated list of books for career growth and skill development</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'coaching:resource_recommendations' %}" class="text-blue-600 hover:text-blue-500 text-sm font-medium">
+                            View all resources →
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Progress Reports -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">Progress Reports</h2>
+                    
+                    <p class="text-gray-600 text-sm mb-4">Track your coaching journey with detailed progress reports</p>
+                    
+                    <div class="space-y-3">
+                        <a href="{% url 'coaching:generate_report' %}" 
+                           class="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <div class="flex items-center">
+                                <i class="fas fa-plus text-blue-500 mr-3"></i>
+                                <span>Generate New Report</span>
+                            </div>
+                            <i class="fas fa-arrow-right text-gray-400"></i>
+                        </a>
+                        
+                        <a href="{% url 'coaching:progress_reports' %}" 
+                           class="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-line text-green-500 mr-3"></i>
+                                <span>View All Reports</span>
+                            </div>
+                            <i class="fas fa-arrow-right text-gray-400"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips and interactive elements
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any dashboard-specific JavaScript here
+        
+        // Auto-refresh recommendations every 5 minutes
+        setTimeout(() => {
+            window.location.reload();
+        }, 300000); // 5 minutes
+    });
+</script>
+{% endblock %}

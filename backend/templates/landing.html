@@ -1,0 +1,561 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerCompass Kenya — Career guidance that actually knows you</title>
+<meta name="description" content="CareerCompass Kenya pairs a real personality assessment with Kenyan job-market data and an AI career coach — free, built for Kenyan students, and honest about how your matches are calculated.">
+<meta name="csrf-token" content="{{ csrf_token }}">
+{# Zero external requests: no CDN fonts, no icon fonts, no JS frameworks. #}
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%232563eb'/%3E%3Ccircle cx='12' cy='12' r='7' fill='none' stroke='white' stroke-width='1.6'/%3E%3Cpath d='M14.5 9.5 L11 11 L9.5 14.5 L13 13 Z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+{# ════════════════════════════════════════════════════════════════════════
+   Inline SVG sprite — every icon on this page. No icon font, no requests.
+   ════════════════════════════════════════════════════════════════════════ #}
+<svg style="display:none" aria-hidden="true">
+  <symbol id="icon-compass" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><path d="M14.8 9.2 L11 11 L9.2 14.8 L13 13 Z" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="4,13 9,18 20,6"/>
+  </symbol>
+  <symbol id="icon-info" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.6" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="icon-spark" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3 L13.4 9.3 L19.5 11 L13.4 12.7 L12 19 L10.6 12.7 L4.5 11 L10.6 9.3 Z"/>
+  </symbol>
+  <symbol id="icon-layers" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 4 L21 9 L12 14 L3 9 Z"/><path d="M3 14 L12 19 L21 14"/>
+  </symbol>
+  <symbol id="icon-users" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="8.5" cy="8" r="3"/><path d="M2.5 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/>
+    <circle cx="17" cy="8.5" r="2.3"/><path d="M15.6 13.2c2.6.3 4.4 2.2 4.4 5.3"/>
+  </symbol>
+  <symbol id="icon-eye" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="icon-message" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 5h16v11H8l-4 4Z"/>
+  </symbol>
+  <symbol id="icon-book" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 6.5c-1.8-1.3-4.3-1.8-7-1.8v13c2.7 0 5.2.5 7 1.8 1.8-1.3 4.3-1.8 7-1.8v-13c-2.7 0-5.2.5-7 1.8Z"/><line x1="12" y1="6.5" x2="12" y2="19.5"/>
+  </symbol>
+  <symbol id="icon-cap" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 9 12 4l10 5-10 5Z"/><path d="M6 11.5v4.3c0 1.3 2.7 2.4 6 2.4s6-1.1 6-2.4v-4.3"/><line x1="21" y1="9" x2="21" y2="15.5"/>
+  </symbol>
+  <symbol id="icon-trend" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="3,17 9,11 13,15 21,6"/><polyline points="15,6 21,6 21,12"/>
+  </symbol>
+  <symbol id="icon-phone" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="7" y="2.5" width="10" height="19" rx="2"/><line x1="10.5" y1="18.2" x2="13.5" y2="18.2"/>
+  </symbol>
+  <symbol id="icon-lock" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>
+  </symbol>
+  <symbol id="icon-shield" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3 4.5 6v6c0 4.8 3.2 7.6 7.5 9 4.3-1.4 7.5-4.2 7.5-9V6Z"/>
+  </symbol>
+  <symbol id="icon-ban" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><line x1="5.8" y1="5.8" x2="18.2" y2="18.2"/>
+  </symbol>
+  <symbol id="icon-plus" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </symbol>
+  <symbol id="icon-menu" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3.5" y1="6.5" x2="20.5" y2="6.5"/><line x1="3.5" y1="12" x2="20.5" y2="12"/><line x1="3.5" y1="17.5" x2="20.5" y2="17.5"/>
+  </symbol>
+  <symbol id="icon-x" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+  </symbol>
+  <symbol id="icon-arrow-right" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.1" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="4" y1="12" x2="19" y2="12"/><polyline points="13,6 19,12 13,18"/>
+  </symbol>
+  <symbol id="icon-mail" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/>
+  </symbol>
+</svg>
+
+{# ════════════════════════════════════════════════════════════════════════
+   NAV
+   ════════════════════════════════════════════════════════════════════════ #}
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="#main" class="brand">
+      <span class="brand-mark"><svg class="icon"><use href="#icon-compass"/></svg></span>
+      <span>CareerCompass<span class="brand-sub">Kenya · Career Guidance</span></span>
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#how-it-works">How it works</a>
+      <a href="#explore">Explore careers</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+      <a href="{% url 'login' %}">Sign in</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="{% url 'login' %}" class="btn btn-outline btn-sm">Sign in</a>
+      <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Get started free</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">
+        <svg class="icon"><use href="#icon-menu"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  {# ══════════════════════════════════════════════════════════════════════
+     HERO
+     ══════════════════════════════════════════════════════════════════════ #}
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="container hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>Free · Built in Kenya, for Kenyan students</span>
+        <h1>Choosing a career shouldn't feel like <em>guessing in the dark.</em></h1>
+        <p class="hero-lede">
+          CareerCompass pairs a real, validated personality assessment with Kenyan job-market
+          data and an AI coach that's actually available when you need it — so your next step
+          is based on who you are, not on who you've happened to hear about.
+        </p>
+        <div class="hero-cta-row">
+          <a href="{% url 'register' %}" class="btn btn-primary">
+            Start free — 15 minutes <svg class="icon"><use href="#icon-arrow-right"/></svg>
+          </a>
+          <a href="{% url 'recommendations:public_career_list' %}" class="btn btn-outline">
+            Browse careers, no account needed
+          </a>
+        </div>
+        <div class="hero-trust">
+          <span><svg class="icon"><use href="#icon-check"/></svg>Completely free</span>
+          <span><svg class="icon"><use href="#icon-check"/></svg>No credit card, ever</span>
+          <span><svg class="icon"><use href="#icon-check"/></svg>Built for the Kenyan market</span>
+        </div>
+      </div>
+
+      <div class="hero-panel reveal">
+        <div class="hero-panel-head">
+          <span class="icon-circle icon-circle--blue"><svg class="icon"><use href="#icon-trend"/></svg></span>
+          <div>
+            <div class="hero-panel-title">How your match is built</div>
+            <div class="hero-panel-sub">Example breakdown — your real numbers come from your own answers</div>
+          </div>
+        </div>
+
+        <div class="hero-bar-row">
+          <div class="hero-bar-label"><span>Personality fit</span><span>55%</span></div>
+          <div class="hero-bar-track"><div class="hero-bar-fill" data-fill="55" style="background:linear-gradient(90deg,#3b82f6,#6366f1)"></div></div>
+        </div>
+        <div class="hero-bar-row">
+          <div class="hero-bar-label"><span>Academic fit</span><span>30%</span></div>
+          <div class="hero-bar-track"><div class="hero-bar-fill" data-fill="30" style="background:linear-gradient(90deg,#6366f1,#8b5cf6)"></div></div>
+        </div>
+        <div class="hero-bar-row">
+          <div class="hero-bar-label"><span>Learning style</span><span>10%</span></div>
+          <div class="hero-bar-track"><div class="hero-bar-fill" data-fill="10" style="background:#8b5cf6"></div></div>
+        </div>
+        <div class="hero-bar-row">
+          <div class="hero-bar-label"><span>Interest alignment</span><span>5%</span></div>
+          <div class="hero-bar-track"><div class="hero-bar-fill" data-fill="5" style="background:#d97706"></div></div>
+        </div>
+
+        <div class="hero-panel-footnote">
+          <svg class="icon"><use href="#icon-info"/></svg>
+          <span>Market demand and salary are shown on every career page — they're just not allowed
+          to bias your personal match score, so your results reflect you, not just the job market.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ══════════════════════════════════════════════════════════════════════
+     EMPATHY / CHECK-IN
+     ══════════════════════════════════════════════════════════════════════ #}
+  <section class="section section--tint" id="start">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow"><span class="dot"></span>Start here</span>
+        <h2>Wherever you're starting from, that's a fine place to start.</h2>
+        <p>No login, nothing saved, nothing sent anywhere — just tap whichever feels closest right now.</p>
+      </div>
+
+      <div class="checkin-grid reveal">
+        <button type="button" class="checkin-card" data-checkin="lost" aria-pressed="false">
+          <span class="icon-circle icon-circle--blue"><svg class="icon"><use href="#icon-spark"/></svg></span>
+          <span>
+            <span class="checkin-card-text">I genuinely don't know what I want to do</span>
+            <span class="checkin-card-hint">Tap to see what we'd suggest</span>
+          </span>
+        </button>
+        <button type="button" class="checkin-card" data-checkin="unsure" aria-pressed="false">
+          <span class="icon-circle icon-circle--purple"><svg class="icon"><use href="#icon-layers"/></svg></span>
+          <span>
+            <span class="checkin-card-text">I have an idea, but I'm not sure it's really "me"</span>
+            <span class="checkin-card-hint">Tap to see what we'd suggest</span>
+          </span>
+        </button>
+        <button type="button" class="checkin-card" data-checkin="pressure" aria-pressed="false">
+          <span class="icon-circle icon-circle--amber"><svg class="icon"><use href="#icon-users"/></svg></span>
+          <span>
+            <span class="checkin-card-text">People around me have a lot of opinions about my future</span>
+            <span class="checkin-card-hint">Tap to see what we'd suggest</span>
+          </span>
+        </button>
+        <button type="button" class="checkin-card" data-checkin="curious" aria-pressed="false">
+          <span class="icon-circle icon-circle--green"><svg class="icon"><use href="#icon-eye"/></svg></span>
+          <span>
+            <span class="checkin-card-text">I just want to see what's out there first</span>
+            <span class="checkin-card-hint">Tap to see what we'd suggest</span>
+          </span>
+        </button>
+      </div>
+
+      <div class="checkin-reply" data-checkin-reply="lost" tabindex="-1">
+        <span class="checkin-reply-avatar"><svg class="icon" style="color:#fff"><use href="#icon-message"/></svg></span>
+        <div class="checkin-reply-body">
+          <span class="checkin-reply-tag">That's a completely normal place to start</span>
+          <p>Most people your age haven't been exposed to enough careers yet to know — guessing now
+          would honestly be unfair to you. CareerCompass starts with a 60-question assessment of how
+          you naturally think and work, then matches that against real careers. You're working from
+          evidence, not a shrug.</p>
+          <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Take the free assessment <svg class="icon"><use href="#icon-arrow-right"/></svg></a>
+        </div>
+      </div>
+
+      <div class="checkin-reply" data-checkin-reply="unsure" tabindex="-1">
+        <span class="checkin-reply-avatar"><svg class="icon" style="color:#fff"><use href="#icon-message"/></svg></span>
+        <div class="checkin-reply-body">
+          <span class="checkin-reply-tag">That gap is worth taking seriously</span>
+          <p>The space between what you're drawn to and what feels expected of you is exactly what
+          the personality assessment is built to check. It won't tell you what to want — it'll show
+          you whether your instinct and the way you actually think tend to agree.</p>
+          <a href="{% url 'register' %}" class="btn btn-primary btn-sm">See if it fits <svg class="icon"><use href="#icon-arrow-right"/></svg></a>
+        </div>
+      </div>
+
+      <div class="checkin-reply" data-checkin-reply="pressure" tabindex="-1">
+        <span class="checkin-reply-avatar"><svg class="icon" style="color:#fff"><use href="#icon-message"/></svg></span>
+        <div class="checkin-reply-body">
+          <span class="checkin-reply-tag">Their advice is usually well-meant — and dated</span>
+          <p>Family and teachers care, but their sense of "good careers" was shaped by their own
+          time, not yours. Having your own personality profile and your own match scores gives you
+          something concrete to bring into that conversation — evidence, not just a feeling you're
+          trying to defend.</p>
+          <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Build your own evidence <svg class="icon"><use href="#icon-arrow-right"/></svg></a>
+        </div>
+      </div>
+
+      <div class="checkin-reply" data-checkin-reply="curious" tabindex="-1">
+        <span class="checkin-reply-avatar"><svg class="icon" style="color:#fff"><use href="#icon-message"/></svg></span>
+        <div class="checkin-reply-body">
+          <span class="checkin-reply-tag">Fair enough — no pressure, no account needed</span>
+          <p>Here's the open career catalogue: real Kenyan careers, salary ranges, and demand data,
+          free to browse without signing up for anything. If something catches your eye, the
+          assessment is there when you're ready — not before.</p>
+          <a href="{% url 'recommendations:public_career_list' %}" class="btn btn-primary btn-sm">Browse the catalogue <svg class="icon"><use href="#icon-arrow-right"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ══════════════════════════════════════════════════════════════════════
+     HOW IT WORKS
+     ══════════════════════════════════════════════════════════════════════ #}
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow"><span class="dot"></span>How it works</span>
+        <h2>Four steps. Nothing hidden.</h2>
+        <p>Every number on this page is the same one you'll see inside the product — we're not going to show you a nicer version on the way in.</p>
+      </div>
+
+      <div class="steps-row reveal">
+        <div class="step-card">
+          <span class="step-num">1</span>
+          <span class="icon-circle icon-circle--blue"><svg class="icon"><use href="#icon-spark"/></svg></span>
+          <h3>Take the assessment</h3>
+          <p>60 questions, 15 per dimension, about 15–20 minutes. Answers autosave, so closing your
+          browser mid-way is fine — it picks up exactly where you left off.</p>
+        </div>
+        <div class="step-card">
+          <span class="step-num">2</span>
+          <span class="icon-circle icon-circle--indigo"><svg class="icon"><use href="#icon-trend"/></svg></span>
+          <h3>Get your matches</h3>
+          <p>A weighted score blends your personality type, academic background, and learning style
+          into a ranked list of careers — explained below, not hidden behind the score.</p>
+        </div>
+        <div class="step-card">
+          <span class="step-num">3</span>
+          <span class="icon-circle icon-circle--purple"><svg class="icon"><use href="#icon-message"/></svg></span>
+          <h3>Talk to your AI coach</h3>
+          <p>Ask follow-up questions about subjects, universities, or specific careers, day or night
+          — it understands the Kenyan education system, not just generic career advice.</p>
+        </div>
+        <div class="step-card">
+          <span class="step-num">4</span>
+          <span class="icon-circle icon-circle--green"><svg class="icon"><use href="#icon-book"/></svg></span>
+          <h3>Build your path</h3>
+          <p>Each career comes with the subjects it needs and a learning-resource path, so "what
+          now?" has an actual answer instead of just a label.</p>
+        </div>
+      </div>
+
+      <div class="formula-card reveal">
+        <div class="formula-title"><svg class="icon" style="color:var(--blue)"><use href="#icon-trend"/></svg>Exactly how your match score is calculated</div>
+        <div class="formula-bar" role="img" aria-label="Match score weighting: 55% personality fit, 30% academic fit, 10% learning style, 5% interest alignment">
+          <div class="formula-seg" data-pct="55" style="background:linear-gradient(90deg,#3b82f6,#6366f1)"></div>
+          <div class="formula-seg" data-pct="30" style="background:linear-gradient(90deg,#6366f1,#8b5cf6)"></div>
+          <div class="formula-seg" data-pct="10" style="background:#8b5cf6"></div>
+          <div class="formula-seg" data-pct="5" style="background:#d97706"></div>
+        </div>
+        <ul class="formula-legend">
+          <li><span class="formula-swatch" style="background:#3b82f6"></span>Personality fit — 55%</li>
+          <li><span class="formula-swatch" style="background:#6366f1"></span>Academic fit — 30%</li>
+          <li><span class="formula-swatch" style="background:#8b5cf6"></span>Learning style — 10%</li>
+          <li><span class="formula-swatch" style="background:#d97706"></span>Interest alignment — 5%</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {# ══════════════════════════════════════════════════════════════════════
+     KENYAN-SPECIFIC CREDIBILITY
+     ══════════════════════════════════════════════════════════════════════ #}
+  <section class="section section--tint">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow"><span class="dot"></span>Why it's different</span>
+        <h2>Not a generic quiz with Kenyan flags pasted on</h2>
+        <p>Most career platforms are built elsewhere and translated. This one was built around the system you're actually in.</p>
+      </div>
+      <div class="cred-grid reveal">
+        <div class="cred-card">
+          <span class="icon-circle icon-circle--blue"><svg class="icon"><use href="#icon-cap"/></svg></span>
+          <h3>Built around KCSE, not GCSEs</h3>
+          <p>Subject recommendations are mapped to the Kenyan curriculum and grading system, so the advice you get is something you can actually act on at your school.</p>
+        </div>
+        <div class="cred-card">
+          <span class="icon-circle icon-circle--green"><svg class="icon"><use href="#icon-trend"/></svg></span>
+          <h3>Real Kenyan salary &amp; demand data</h3>
+          <p>Career pages show local market context, not US averages quietly converted to shillings.</p>
+        </div>
+        <div class="cred-card">
+          <span class="icon-circle icon-circle--amber"><svg class="icon"><use href="#icon-phone"/></svg></span>
+          <h3>Designed for the connection you actually have</h3>
+          <p>Password resets use a one-time code by default because we assume mobile data, not fibre. This very page loads without a single external font, icon, or script.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ══════════════════════════════════════════════════════════════════════
+     PRIVACY
+     ══════════════════════════════════════════════════════════════════════ #}
+  <section class="section section--navy" id="privacy">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" style="color:#93c5fd"><span class="dot" style="background:#93c5fd"></span>Before you tell us anything</span>
+        <h2>What happens to what you share</h2>
+        <p>You're about to answer 60 fairly personal questions and possibly talk to an AI about your future. Here's exactly what we do with that.</p>
+      </div>
+      <div class="privacy-grid reveal">
+        <div class="privacy-item">
+          <span class="icon-circle"><svg class="icon"><use href="#icon-lock"/></svg></span>
+          <div><h4>Your password is never stored as text</h4><p>It's hashed with PBKDF2-SHA256 before it ever touches the database. Nobody on our side can read it.</p></div>
+        </div>
+        <div class="privacy-item">
+          <span class="icon-circle"><svg class="icon"><use href="#icon-shield"/></svg></span>
+          <div><h4>Encrypted in transit, hosted in East Africa</h4><p>Every connection runs over HTTPS/TLS 1.3, and your data is stored on servers within the region.</p></div>
+        </div>
+        <div class="privacy-item">
+          <span class="icon-circle"><svg class="icon"><use href="#icon-ban"/></svg></span>
+          <div><h4>Never sold, never shared with advertisers</h4><p>No third party gets your assessment results or profile. There's no ad business here to sell it to.</p></div>
+        </div>
+        <div class="privacy-item">
+          <span class="icon-circle"><svg class="icon"><use href="#icon-message"/></svg></span>
+          <div><h4>Your AI coach chats stay yours</h4><p>Conversations are private to your account and are not used to train any AI model. You can request full deletion at any time.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ══════════════════════════════════════════════════════════════════════
+     EXPLORE WITHOUT AN ACCOUNT
+     ══════════════════════════════════════════════════════════════════════ #}
+  <section class="section" id="explore">
+    <div class="container">
+      <div class="explore-card reveal">
+        <div class="explore-card-text">
+          <h3>Not ready to make an account? Look around first.</h3>
+          <p>Browse the full career catalogue and current Kenyan market trends — salaries, demand, required subjects — with nothing to sign up for and nothing to undo later.</p>
+        </div>
+        <div class="explore-card-actions">
+          <a href="{% url 'recommendations:public_career_list' %}" class="btn btn-outline">Explore careers</a>
+          <a href="{% url 'recommendations:market_trends' %}" class="btn btn-outline">Market trends</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ══════════════════════════════════════════════════════════════════════
+     FAQ
+     ══════════════════════════════════════════════════════════════════════ #}
+  <section class="section section--tint" id="faq">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow"><span class="dot"></span>Before you ask</span>
+        <h2>Frequently asked questions</h2>
+        <p>The questions people actually have before creating an account — not after.</p>
+      </div>
+
+      <div class="faq-list reveal">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-a1">
+            <span>What is CareerCompass Kenya, exactly?</span>
+            <svg class="icon"><use href="#icon-plus"/></svg>
+          </button>
+          <div class="faq-a" id="faq-a1">
+            <div class="faq-a-inner">
+              <p>An AI-powered career guidance platform built for Kenyan students and anyone exploring
+              a career change. It combines a 60-question, MBTI-based personality assessment with
+              Kenyan labour-market data to produce ranked career matches, then backs that up with an
+              AI career coach, subject guidance, and learning-path resources — all free.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-a2">
+            <span>How do I create an account?</span>
+            <svg class="icon"><use href="#icon-plus"/></svg>
+          </button>
+          <div class="faq-a" id="faq-a2">
+            <div class="faq-a-inner">
+              <p>Click "Get started free," enter your name, email, and a password, and choose
+              whether you're a <strong>Student</strong> (adds optional school and subject fields) or
+              a <strong>General User</strong> exploring options. It takes about two minutes, and
+              you're logged in immediately afterward.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-a3">
+            <span>Is it actually free, or is there a catch later?</span>
+            <svg class="icon"><use href="#icon-plus"/></svg>
+          </button>
+          <div class="faq-a" id="faq-a3">
+            <div class="faq-a-inner">
+              <p>The assessment, your career matches, the AI coach, and the learning-path resources
+              are all free for registered accounts — no credit card, no premium tier you'll run into
+              later. No hidden catch.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-a4">
+            <span>How long does the assessment take, and can I pause halfway?</span>
+            <svg class="icon"><use href="#icon-plus"/></svg>
+          </button>
+          <div class="faq-a" id="faq-a4">
+            <div class="faq-a-inner">
+              <p>Most people finish in 15–20 minutes across 60 questions. Your answers save after
+              every question, so closing your browser or losing signal mid-way is fine — come back
+              and it resumes exactly where you stopped.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-a5">
+            <span>Who is this actually built for right now?</span>
+            <svg class="icon"><use href="#icon-plus"/></svg>
+          </button>
+          <div class="faq-a" id="faq-a5">
+            <div class="faq-a-inner">
+              <p>Primarily Kenyan secondary and tertiary students, plus anyone reconsidering their
+              career direction. Registration currently supports <strong>Student</strong> and
+              <strong>General User</strong> accounts.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-a6">
+            <span>Is my data safe, and will an AI read my secrets and sell them?</span>
+            <svg class="icon"><use href="#icon-plus"/></svg>
+          </button>
+          <div class="faq-a" id="faq-a6">
+            <div class="faq-a-inner">
+              <p>Your password is hashed (never stored as plain text), every connection is encrypted,
+              and your assessment results and coach conversations are not sold, shared with
+              advertisers, or used to train any AI model. You can request complete account deletion
+              at any time. See the <a href="#privacy">Privacy section above</a> for the full detail.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ══════════════════════════════════════════════════════════════════════
+     FINAL CTA
+     ══════════════════════════════════════════════════════════════════════ #}
+  <section class="section section--navy final-cta">
+    <div class="container">
+      <h2>Start when you're ready. We'll be here.</h2>
+      <p>No pressure, no countdown, no "limited spots." Fifteen minutes whenever you decide it's time.</p>
+      <div class="final-cta-actions">
+        <a href="{% url 'register' %}" class="btn btn-light">Start free — 15 minutes</a>
+        <a href="{% url 'recommendations:public_career_list' %}" class="btn btn-ghost">Browse careers first</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+{# ══════════════════════════════════════════════════════════════════════════
+   FOOTER
+   ══════════════════════════════════════════════════════════════════════════ #}
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="brand"><span class="brand-mark"><svg class="icon"><use href="#icon-compass"/></svg></span>CareerCompass Kenya</span>
+        <p>AI-powered career guidance for Kenyan students — personality science, local market data, and an AI coach, free to use.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h5>Product</h5>
+          <a href="#how-it-works">How it works</a>
+          <a href="{% url 'recommendations:public_career_list' %}">Explore careers</a>
+          <a href="{% url 'recommendations:market_trends' %}">Market trends</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div class="footer-col">
+          <h5>Account</h5>
+          <a href="{% url 'register' %}">Create account</a>
+          <a href="{% url 'login' %}">Sign in</a>
+        </div>
+        <div class="footer-col">
+          <h5>Support</h5>
+          <a href="mailto:support@careercompass.ke"><svg class="icon" style="width:.9rem;height:.9rem;display:inline;vertical-align:-2px;margin-right:.3rem"><use href="#icon-mail"/></svg>support@careercompass.ke</a>
+          <span>Egerton University · COMP 493</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 CareerCompass Kenya — Egerton University COMP 493</span>
+      <span>Samuel Mathews · S13/07776/22</span>
+    </div>
+  </div>
+</footer>
+
+<script src="{% static 'js/landing.js' %}"></script>
+</body>
+</html>
